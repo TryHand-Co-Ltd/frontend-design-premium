@@ -1,0 +1,173 @@
+{
+  "skill_name": "frontend-design-premium",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Làm màn hình quản lý API keys gồm list, search, create/edit và delete. App đang dùng tiếng Nhật. Bám theo style hiện tại, đừng hỏi nhiều.",
+      "expected_output": "Loads upstream frontend-design and project DESIGN.md or creates it from existing evidence, inspects sibling flows, implements bounded table navigation, IME-safe debounced clearable search, masked key fields, complete Japanese locale/copy, app dialog for deletion, consistent save-back-to-list behavior, and verifies all states.",
+      "files": [
+        "fixtures/broken-admin-table.tsx"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build the B1 create screen to match our existing A1 flow. Saving A1 returns to list A with a toast. Add password and notes fields, and polish interactions.",
+      "expected_output": "Infers B1 should return to list B, reads the design context, reuses shared feedback/navigation patterns, masks password with reveal control, disables textarea resize with adequate sizing, disables native validation UI, and includes hover/focus/busy/error behavior without unnecessary questions.",
+      "files": [
+        "fixtures/a1-b1-consistency.tsx"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review and fix this React admin table. It loads all records, uses window.confirm for delete, the search fires on every key, rows are clickable divs, and loading changes the page width.",
+      "expected_output": "Finds and fixes production violations through existing/shared primitives: dataset navigation decision, app-owned accessible confirmation, debounced cancelable IME-safe search with clear control, semantic row navigation/actions, responsive overflow, scrollbar/layout stability, state coverage, and regression verification.",
+      "files": [
+        "fixtures/broken-admin-table.tsx"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Create a one-page experimental marketing hero with no forms, tables, accounts, or app workflows. Make it visually unforgettable.",
+      "expected_output": "The premium skill composes upstream visual design and applies accessibility/stability, but does not force CRUD contracts or create durable application artifacts for a throwaway isolated marketing surface unless the repository already uses them.",
+      "files": [
+        "fixtures/marketing-hero.tsx"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Start a new multi-screen operations SaaS from this short business brief. Make the dashboard and user-management foundation; choose the design direction yourself.",
+      "expected_output": "Loads frontend-design, derives a concrete product-register North Star and anti-references, proactively creates a valid root DESIGN.md and UX-CONTRACT.md, establishes implementable tokens and shared primitives, avoids generic adjectives/default aesthetics, and lints/verifies the design context.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Standardize billing settings in this mature 120-screen app. There is no DESIGN.md, four Button families and three dialog/toast systems coexist, but the app has a theme package and Storybook. Do not big-bang redesign or break releases.",
+      "expected_output": "Uses scan mode to document rather than rebrand the existing identity, traces canonical runtime token ownership into DESIGN.md, inventories duplicate primitives and behavior drift in one migration ledger, selects targets by safety rather than popularity, hardens adapters/shared primitives, prioritizes destructive billing flows, defines rollout/rollback and legacy-removal gates, and avoids an unreviewable 120-screen rewrite.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Implement a Japanese onboarding wizard with company autocomplete, establishment date range, logo/document upload, a review step, and resumable draft saving.",
+      "expected_output": "Implements accessible IME-safe combobox, localized date/range semantics, picker-accessible upload with validation/progress/retry, stable multi-step navigation and per-step validation, explicit draft local/sync/saved/failed states, Japanese calendar/timezone decisions, and full keyboard/error/offline verification.",
+      "files": [
+        "fixtures/jp-onboarding-wizard.tsx"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Make this audit-records screen work on mobile. It has 14 columns, bulk revoke, expandable details, tabs, breadcrumbs, a desktop sidebar, and long IDs.",
+      "expected_output": "Chooses a responsive table strategy from comparison needs without silently dropping data, keeps selection scope and dangerous bulk count exact, implements accessible row disclosure/tabs/breadcrumbs, transforms sidebar to a focus-managed drawer, exposes full truncated IDs without hover-only access, and preserves route/filter/focus state.",
+      "files": [
+        "fixtures/audit-records-mobile.tsx"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Make status toggles instant and add autosave to profile editing. Users often work in two tabs and their session can expire.",
+      "expected_output": "Classifies optimistic eligibility, adds pending/rollback/reconciliation and idempotency, defines truthful autosave and draft recovery, prevents multi-tab/newer-version overwrites, preserves safe work through session expiry/re-auth, and tests uncertain completion rather than only happy paths.",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Build a long-running CSV import: upload, mapping, background processing, progress, partial failures, activity log, notification count, and offline reconnect.",
+      "expected_output": "Implements safe accessible upload and mapping, server-confirmed background job creation, truthful determinate/staged progress with leave-and-return path, partial success recovery, semantic audit timeline/timezone, stable accessible badge count, degraded connectivity banner, bounded retries and reconnect revalidation.",
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "Add keyboard shortcuts, a Ctrl+K command palette, a right-click row menu, sortable drag handles, accordion help, and a dual range slider. Everything must be keyboard accessible.",
+      "expected_output": "Treats shortcuts/context menu as conditional enhancements, avoids browser/IME/input conflicts, provides visible menu and non-drag alternatives, implements complete combobox/menu/accordion/slider semantics and focus restoration, respects reduced motion, and verifies keyboard-only and screen-reader behavior.",
+      "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "Add dark mode and change our app-wide button radius and accent color. DESIGN.md, CSS variables, Tailwind config and ThemeProvider currently duplicate values. Update shared screens without introducing token drift.",
+      "expected_output": "Reads existing DESIGN.md, chooses and documents one token ownership model, maps DESIGN paths through generated or canonical CSS variables into Tailwind/ThemeProvider adapters and shared components, removes independent duplicate literals, preserves semantic intent and contrast across themes, runs DESIGN.md lint/diff plus token drift checks, and performs representative cross-theme state/visual regression instead of patching screens individually.",
+      "files": []
+    },
+    {
+      "id": 13,
+      "prompt": "Add a slide-in cart drawer with staggered item entrance and a confirmation dialog. The dialog should scale in on open and fade out on close. Respect reduced motion.",
+      "expected_output": "Implements drawer slide-in with cubic-bezier 250ms, staggered list items at 50ms delay each, dialog spring entrance (scale 1.05 to 1), opacity-only exit at 150ms, reduced motion fallback (opacity only, no transform), and AnimatePresence for exit animations. Does not animate decorative elements.",
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "Build a user profile edit form with React Hook Form + Zod (or Formik + Yup), email and password fields. Show a common error banner for server errors and inline field errors. The form uses Japanese error messages.",
+      "expected_output": "Uses either Formik+Yup or React Hook Form+Zod for form state and validation. Has separate common error banner via useState, server error to field mapping (setFieldError/setError), post-submit recovery (clear on edit), and novalidate/noValidate. Japanese messages explain what is wrong and how to fix. Submit button shows busy state, prevents double submit, preserves values on server error.",
+      "files": [
+        "fixtures/profile-edit-form.tsx"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Review this existing app: DESIGN.md says 'flat surfaces at rest' but all cards have box-shadow. It says 'pill radius buttons' but the Button component uses 8px radius. It says 'no bold body text' but section titles use semibold. What do you recommend?",
+      "expected_output": "Produces a structured drift report table (Rule, Evidence, Verdict, Action). Classifies each discrepancy as intentional evolution (update DESIGN.md), unintentional drift (fix code), or ambiguous (ask user). Does not silently rewrite DESIGN.md. Does not propose big-bang redesign. Records actions: some DESIGN.md updates, some component fixes, one question for the user.",
+      "files": []
+    },
+    {
+      "id": 16,
+      "prompt": "Migrate this project's tokens from a Tailwind v3 config file to v4 @theme inline. DESIGN.md, old tailwind.config.ts, and CSS :root currently duplicate values. Keep the DESIGN.md as the authoring layer.",
+      "expected_output": "Reads existing DESIGN.md and tailwind.config.ts. Chooses ownership model (DESIGN.md generates → @theme inline). Creates the @theme inline block from exported DESIGN.md values. Removes duplicate tailwind.config.ts. Maps all component utilities from old config classes to new @theme variables. Runs designmd lint + diff. Verifies no broken utility classes in components.",
+      "files": []
+    },
+    {
+      "id": 17,
+      "prompt": "Add a high-contrast theme to this app. The existing DESIGN.md defines light and dark themes via CSS variables. Keep semantic token names unchanged; only their values change per theme. Ensure WCAG contrast in all three themes.",
+      "expected_output": "Reads existing DESIGN.md and CSS theme variables. Adds a .high-contrast selector overriding only semantic tokens, not component styles. Verifies color contrast ratios in each theme using tooling or computed values. Updates DESIGN.md theme section to document the third theme. Does not duplicate component styles per theme — relies on CSS variable remapping.",
+      "files": []
+    },
+    {
+      "id": 18,
+      "prompt": "Standardize notifications across a 200-screen app. Currently: 3 toast libraries (react-toastify, sonner, custom), 2 dialog systems (shadcn + custom), and 4 banner styles. Prioritize destructive and billing flows.",
+      "expected_output": "Inventories all notification surfaces and classifies by severity (toast, dialog, banner). Selects one canonical toast/dialog/banner primitive. Hardens the selected components with compatibility layer for existing callers. Migrates destructive and billing workflows first (highest risk). Defines rollout gates: all new code uses canonical, legacy removed after 2 weeks zero-defect. Creates migration ledger with rollback criteria.",
+      "files": []
+    },
+    {
+      "id": 19,
+      "prompt": "Implement a Japanese registration form that only accepts corporate email addresses (reject gmail.com, yahoo.co.jp, etc.). Validate with regex, show localized error, and handle the common exclusion pattern.",
+      "expected_output": "Implements email field with real-time regex exclusion of consumer email providers. Shows Japanese error message listing excluded domains. Uses Yup test() for validationSchema and additional client pre-check before submit. Common error banner for server validation and inline field error for immediate rejection. Novalidate on form. Tested with both allowed and blocked addresses.",
+      "files": [
+        "fixtures/profile-edit-form.tsx"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "Write a Python script to parse JSON logs and extract error rates by service. Output a summary table. No UI needed.",
+      "expected_output": "Skill does NOT activate frontend-design or frontend-design-premium. The task is backend-only data processing with no UI. The agent should decline to apply UI design context or production contracts, and write only the Python script.",
+      "files": [
+        "fixtures/parse-json-logs.py"
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "Add a destructive delete button to this user row. When clicked, show a confirmation dialog. The delete is irreversible. The async operation should keep the dialog open during loading.",
+      "expected_output": "Uses app-owned AlertDialog with destructive intent styling (danger variant, red). Dialog titles the action, names the user, describes consequence ('irreversible'). Cancel button gets initial focus. Async mutation keeps dialog open with loading spinner; error stays in dialog with retry; success closes dialog and shows toast. Button uses the destructive verb ('Delete', not 'OK').",
+      "files": [
+        "fixtures/destructive-delete-row.tsx"
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "Draft a UX-CONTRACT.md for a multi-step checkout flow. Include save/cancel behavior, validation strategy, destructive actions, async resilience, and locale policy.",
+      "expected_output": "Creates a UX-CONTRACT.md following the template. Documents create/edit/delete flow behaviors, server pagination default, common error + inline validation, destructive confirm with danger intent, timeout/session handling, and Japanese locale. Does NOT duplicate visual tokens from DESIGN.md.",
+      "files": []
+    },
+    {
+      "id": 23,
+      "prompt": "Review and fix permission UX on this analysis detail page. Viewers should understand why Delete/Edit are unavailable, Billing should not appear for roles that never pay, clipboard copy must be accessible, and direct navigation to admin settings must not look like a missing page.",
+      "expected_output": "Reads references/permission-ui.md. Chooses hide vs disable vs 403 correctly: hide Billing for irrelevant roles; show Edit/Delete disabled with an accessible why explanation (not title-only); replace window.confirm with app-owned dialog for admins; implement copy control with changing accessible label and failure feedback; use a dedicated 403/access-denied route for forbidden deep links instead of 404; notes server-side auth remains the source of truth.",
+      "files": [
+        "fixtures/role-gated-actions.tsx"
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "Fix overlay stacking on this job detail screen. A drawer, confirm dialog, and toast overlap incorrectly; z-index values are magic numbers; focus and Escape behavior are missing.",
+      "expected_output": "Reads references/layer-contract.md. Introduces a documented z-index scale via CSS variables (no 9999). Orders layers: backdrop < dialog above drawer; toast always topmost. Adds focus trap, Escape=Cancel, inert/aria-hidden background, and focus restoration. Dialog opened from drawer stacks above the drawer. Toast uses a live region and is never obscured.",
+      "files": [
+        "fixtures/overlay-stack-chaos.tsx"
+      ]
+    }
+  ]
+}
