@@ -1,6 +1,8 @@
 # UX Contract
 
 > Keep this file only when the project needs a durable cross-screen contract. Replace examples with real product decisions.
+>
+> **Read-only review:** When performing a read-only contract audit, report gaps without creating or modifying this file. Identify missing source references or untraced UI consequences in the audit output, not by editing the contract.
 
 ## Product context
 
@@ -88,7 +90,8 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 - Tooltip delay/dismissal:
 - Unsaved-changes behavior:
 - Layer/z-index contract (dialog > drawer > popover > toast stacking order):
-- Soft-delete vs hard-delete policy (reversible/logged vs permanent):
+
+> Deletion/retention lifecycle is recorded in **Business-context sources** above, not duplicated here.
 
 ## Async and resilience
 
@@ -112,9 +115,10 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 ## Permission and clipboard
 
 - Permission UI strategy (hide vs disable vs 403 page):
-- Role-based feature access map:
 - Clipboard copy policy (truncated preview + copy button, no secret in toast):
 - Disabled-state explanation (tooltip with reason):
+
+> Permission/role policy is recorded in **Business-context sources** above. This section records only the UI consequences (hide vs disable, accessible explanation, clipboard access).
 
 ## Migration status (only for an inconsistent established product)
 

@@ -202,10 +202,12 @@ def main() -> int:
             compat = compatibility_status(upstream)
             state = compat.get("status", "UNKNOWN")
             print(f"upstream: {upstream}  [{state}]")
-            if args.strict and state not in ("MATCH",):
-                errors.append(
-                    f"upstream compatibility: {state} — {compat.get('message', '')}"
-                )
+            if state not in ("MATCH",):
+                msg = f"upstream compatibility: {state} — {compat.get('message', '')}"
+                if args.strict:
+                    errors.append(msg)
+                else:
+                    warnings.append(msg)
                 upstream_status_ok = False
         else:
             msg = "frontend-design dependency is not currently discoverable"
@@ -214,8 +216,13 @@ def main() -> int:
             else:
                 warnings.append(msg)
             upstream_status_ok = False
-    except Exception as error:  # validation should report, not crash on resolver problems
-        warnings.append(f"could not run dependency resolver: {error}")
+    except Exception as error:
+        msg = f"upstream resolver exception: {error}"
+        if args.strict:
+            errors.append(msg)
+        else:
+            warnings.append(msg)
+        upstream_status_ok = False
 
     for warning in warnings:
         print(f"WARNING: {warning}")

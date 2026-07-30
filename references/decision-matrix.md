@@ -78,11 +78,13 @@ Never hide fields or actions silently. The same permission, status, order, and b
 
 ## Source conflict and precedence
 
+Use the canonical source precedence table in `SKILL.md §1a` — this file does not restate it to avoid drift.
+
 When two authoritative sources disagree or a maintained document appears stale:
 
 1. Check the repository's own context index or contributor conventions for an explicit conflict-resolution rule.
-2. If no explicit rule exists, apply: verified server/API/domain invariant > maintained ADR/PRD > inferred evidence.
-3. A stale document (verified date older than a known re-architecture) must not silently win over current code evidence.
+2. Apply the §1a precedence. If the conflict crosses precedence levels, the higher-precedence source wins.
+3. A stale document (verified date older than a known re-architecture) must not silently win over current code evidence, even if it has higher nominal precedence.
 4. If conflict persists after applying precedence, surface it explicitly and block the affected decision branch — do not average, guess, or silently pick a winner.
 5. When the conflict is resolved, record the resolution in the relevant contract (`UX-CONTRACT.md` or equivalent) with a reference to the authoritative source and the date reviewed.
 

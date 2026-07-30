@@ -94,10 +94,21 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def normalized_sha256(path: Path) -> str:
+    """Compute SHA-256 of file content after normalizing CRLF to LF.
+
+    This ensures the digest is portable across Windows (CRLF) and
+    Unix (LF) without requiring .gitattributes eol=lf on the upstream.
+    """
+    raw = path.read_bytes()
+    normalized = raw.replace(b"\r\n", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
+
+
 def remote_status(local: Path) -> dict[str, object]:
-    local_bytes = local.read_bytes()
+    local_bytes = local.read_bytes().replace(b"\r\n", b"\n")
     result: dict[str, object] = {
-        "local_sha256": sha256(local_bytes),
+        "local_sha256": hashlib.sha256(local_bytes).hexdigest(),
         "remote_url": UPSTREAM_RAW_URL,
     }
     try:
@@ -106,10 +117,10 @@ def remote_status(local: Path) -> dict[str, object]:
             headers={"User-Agent": "frontend-design-premium/0.1"},
         )
         with urllib.request.urlopen(request, timeout=15) as response:
-            remote_bytes = response.read()
+            remote_bytes = response.read().replace(b"\r\n", b"\n")
         result.update(
             {
-                "remote_sha256": sha256(remote_bytes),
+                "remote_sha256": hashlib.sha256(remote_bytes).hexdigest(),
                 "matches_remote": local_bytes == remote_bytes,
             }
         )
@@ -121,64 +132,63 @@ def remote_status(local: Path) -> dict[str, object]:
 
 
 
-def _parse_frontmatter_value(text: str, key: str) -> str | None:
-    """Extract a quoted scalar value from YAML frontmatter by key.
 
-    Handles:
-      key: "value"
-      key: 'value'
-      key: value
-    within the frontmatter block. Returns None if not found.
+def _parse_frontmatter_block(text: str, key: str) -> dict[str, str] | None:
+    """Parse a YAML block value under a given key from SKILL.md frontmatter.
+
+    Returns a dict of sub-keys to values, or None if the key is not found.
+    The block ends at the next top-level key (same indent as the block key)
+    or at the end of the frontmatter.
+
+    Example input:
+      upstream-tested:
+        revision: "..."
+        digest: "..."
+        tested-with-premium: "..."
+
+    Returns {"revision": "...", "digest": "...", "tested-with-premium": "..."}
     """
     lines = text.splitlines()
+    result: dict[str, str] = {}
+    key_line: int | None = None
+    key_indent: int = 0
     for i, line in enumerate(lines):
         stripped = line.strip()
         if stripped.startswith(f"{key}:"):
-            value = stripped[len(key) + 1:].strip()
-            if value.startswith('"') and value.endswith('"') and len(value) >= 2:
-                return value[1:-1]
-            if value.startswith("'") and value.endswith("'") and len(value) >= 2:
-                return value[1:-1]
-            return value
-    return None
+            key_line = i
+            key_indent = len(line) - len(line.lstrip())
+            break
+    if key_line is None:
+        return None
 
-
-def _parse_frontmatter_list(text: str, key: str) -> list[str]:
-    """Extract a YAML list from frontmatter by key.
-
-    Handles:
-      key:
-        - "item1"
-        - item2
-    Returns empty list if not found.
-    """
-    lines = text.splitlines()
-    result: list[str] = []
-    in_block = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith(f"{key}:"):
-            in_block = True
+    for line in lines[key_line + 1:]:
+        if not line.strip():
+            # Blank line — still inside frontmatter, not end of block
             continue
-        if in_block:
-            if not stripped or not stripped.startswith("-"):
-                # Reached next key or end of frontmatter
-                if stripped and ":" in stripped.split(None, 1)[0]:
-                    in_block = False
-                    break
-                continue
-            item = stripped[1:].strip()
-            if item.startswith('"') and item.endswith('"') and len(item) >= 2:
-                item = item[1:-1]
-            elif item.startswith("'") and item.endswith("'") and len(item) >= 2:
-                item = item[1:-1]
-            if item:
-                result.append(item)
+        indent = len(line) - len(line.lstrip())
+        if indent <= key_indent:
+            # Reached a key at same or lesser indent — block ended
+            break
+        if ":" not in line:
+            continue
+        sub_key, _, raw_value = line.partition(":")
+        value = raw_value.strip().strip("'").strip('"')
+        if value:
+            result[sub_key.strip()] = value
     return result
 
 
+def _is_valid_sha256(s: str) -> bool:
+    """Return True if s is a 64-character lowercase hex string (SHA-256)."""
+    return bool(re.fullmatch(r"[0-9a-f]{64}", s))
+
+
 def load_tested_revisions() -> dict[str, str]:
-    """Read tested-upstream metadata from SKILL.md frontmatter."""
+    """Read tested-upstream metadata from SKILL.md frontmatter.
+
+    Returns a dict mapping digest hex strings to revision labels.
+    Only valid SHA-256 digests are included.
+    """
     premium_skill = Path(__file__).resolve().parents[1] / "SKILL.md"
     if not premium_skill.is_file():
         return {}
@@ -193,14 +203,58 @@ def load_tested_revisions() -> dict[str, str]:
         return {}
     frontmatter = text[4:end]
 
-    revisions: dict[str, str] = {}
-    for line in frontmatter.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("digest:"):
-            value = stripped[len("digest:"):].strip().strip('"')
-            if value and len(value) > 10:
-                revisions[value] = "recorded"
-    return revisions
+    block = _parse_frontmatter_block(frontmatter, "upstream-tested")
+    if block is None:
+        return {}
+    raw_digest = block.get("digest", "")
+    if _is_valid_sha256(raw_digest):
+        return {raw_digest: block.get("revision", "recorded")}
+    return {}
+
+
+def _parse_quoted_list(text: str, key: str) -> list[str]:
+    """Parse a YAML list value from SKILL.md frontmatter.
+
+    Supports both block and inline styles:
+      key:
+        - "item1"
+        - item2
+      key: ["item1", "item2"]
+      key: []
+    """
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        if line.strip().startswith(f"{key}:"):
+            raw = line.strip()
+            # Inline style: key: ["a", "b"] or key: []
+            bracket_start = raw.find("[")
+            if bracket_start >= 0:
+                bracket_end = raw.rfind("]")
+                if bracket_end > bracket_start:
+                    inner = raw[bracket_start + 1:bracket_end]
+                    if inner.strip():
+                        return [
+                            x.strip().strip("'").strip('"')
+                            for x in inner.split(",")
+                            if x.strip()
+                        ]
+                    return []
+            # Block style: iterate subsequent lines
+            result: list[str] = []
+            key_indent = len(line) - len(line.lstrip())
+            for sub_line in lines[i + 1:]:
+                if not sub_line.strip():
+                    continue
+                sub_indent = len(sub_line) - len(sub_line.lstrip())
+                if sub_indent <= key_indent:
+                    break
+                item = sub_line.strip()
+                if item.startswith("-"):
+                    val = item[1:].strip().strip("'").strip('"')
+                    if val:
+                        result.append(val)
+            return result
+    return []
 
 
 def load_incompatible_digests() -> list[str]:
@@ -219,22 +273,8 @@ def load_incompatible_digests() -> list[str]:
         return []
     frontmatter = text[4:end]
 
-    result: list[str] = []
-    in_block = False
-    for line in frontmatter.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("upstream-incompatible:"):
-            in_block = True
-            continue
-        if in_block:
-            if not stripped or not stripped.startswith("-"):
-                if ":" in stripped.split(None, 1)[0]:
-                    in_block = False
-                break
-            item = stripped[1:].strip().strip('"').strip("'")
-            if item:
-                result.append(item)
-    return result
+    raw = _parse_quoted_list(frontmatter, "upstream-incompatible")
+    return [d for d in raw if _is_valid_sha256(d)]
 
 
 SUPPORTED_ROOTS: list[Path] = [
@@ -245,16 +285,30 @@ SUPPORTED_ROOTS: list[Path] = [
 
 
 def trusted_location(path: Path) -> bool:
-    """Return True if the candidate lives under a supported skill root."""
+    """Return True if the candidate lives under a supported skill root.
+
+    Uses component-aware path containment to reject prefix siblings:
+      .agents/skills/frontend-design          -> trusted
+      .agents/skills-evil/frontend-design      -> NOT trusted
+      ../skills/frontend-design                -> NOT trusted
+    """
     try:
         resolved = path.resolve()
     except (OSError, RuntimeError):
         return False
-    resolved_normalized = os.path.normcase(str(resolved))
-    return any(
-        resolved_normalized.startswith(os.path.normcase(str(root)))
-        for root in SUPPORTED_ROOTS
-    )
+    resolved_parts = os.path.normcase(str(resolved)).split(os.sep)
+    for root in SUPPORTED_ROOTS:
+        try:
+            root_resolved = root.resolve()
+        except (OSError, RuntimeError):
+            continue
+        root_parts = os.path.normcase(str(root_resolved)).split(os.sep)
+        if len(resolved_parts) < len(root_parts):
+            continue
+        # Every component of root_parts must match exactly
+        if resolved_parts[:len(root_parts)] == root_parts:
+            return True
+    return False
 
 
 def compatibility_status(
@@ -274,7 +328,7 @@ def compatibility_status(
 
     result: dict[str, str] = {
         "path": str(found),
-        "digest": sha256(found.read_bytes()),
+        "digest": normalized_sha256(found),
     }
     current_digest = result["digest"]
 
@@ -356,7 +410,7 @@ def main() -> int:
     details: dict[str, object] = {
         "name": "frontend-design",
         "path": str(found),
-        "sha256": sha256(found.read_bytes()),
+        "sha256": normalized_sha256(found),
     }
     if args.check_remote:
         details["upstream"] = remote_status(found)

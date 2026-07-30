@@ -206,6 +206,7 @@ def _do_check() -> int:
         print(f"  Install upstream separately (this script does not install {UPSTREAM_NAME}).", file=sys.stderr)
     else:
         # Show upstream compatibility status
+        upstream_incompatible = False
         try:
             sys.path.insert(0, str(SOURCE / "scripts"))
             from resolve_frontend_design import compatibility_status, find_skill
@@ -217,8 +218,13 @@ def _do_check() -> int:
                 print(f"  upstream: {' '.join(UPSTREAM_TARGETS)} [{state}]")
                 if state != "MATCH":
                     print(f"    {msg}")
+                    upstream_incompatible = True
+                    if state == "INCOMPATIBLE":
+                        print(f"    WARNING: INCOMPATIBLE upstream blocks release.", file=sys.stderr)
         except Exception as error:
             print(f"  upstream status check unavailable: {error}")
+        if upstream_incompatible:
+            return 1
     return 0
 
 

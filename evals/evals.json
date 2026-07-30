@@ -172,7 +172,7 @@
     {
       "id": 25,
       "prompt": "Implement a user-deactivation flow for an admin panel. The ADR says deactivation is reversible for 30 days and only Owners can perform it. The existing code has a hard-delete endpoint. There is no permission-policy document. Decide what to build and document the rationale.",
-      "expected_output": "Discovers ADR and domain evidence before visual planning. Distinguishes authoritative policy (ADR: reversible deactivation, Owner-only) from implementation evidence (hard-delete endpoint). Recognises missing permission-policy as a gap that blocks a default decision. Surfaces the conflict between ADR lifecycle and existing code. Escalates the permission rule through grilling or one compact question rather than using a default. Records source references in UX-CONTRACT.md without copying business policy.",
+      "expected_output": "Discovers ADR and domain evidence before visual planning. Distinguishes authoritative policy (ADR: reversible deactivation, Owner-only) from implementation evidence (hard-delete endpoint). Acknowledges ADR is already authoritative for the Owner-only rule (no escalation needed for permission). Surfaces the conflict between ADR lifecycle (reversible deactivation) and existing code (hard-delete endpoint). Records source references in UX-CONTRACT.md without copying business policy. Does not ask the user about decisions already settled by authoritative evidence.",
       "files": []
     },
     {

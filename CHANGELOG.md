@@ -4,6 +4,36 @@ All notable changes to this skill are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).
 
+## [1.1.0] — 2026-07-30
+
+### Added
+
+- **Business-context discovery** (§1a): authoritative source discovery (PRD, ADR, CONTEXT.md, domain/API contracts, permission policies) with source precedence table.
+- **Source conflict and high-risk escalation** in `references/decision-matrix.md`: 7 high-risk categories (permissions, billing, privacy, irreversible ops, legal copy, non-idempotent effects, domain state transitions) with must-not-use-defaults policy. Hard gate integrated into SKILL.md §3.
+- **Upstream compatibility policy** (§0a): 5-state model (MATCH, UNTESTED, MISSING, UNTRUSTED, INCOMPATIBLE) with interactive vs strict mode, documented in SKILL.md.
+- **`resolve_frontend_design.py --status`**: reports upstream fingerprint, provenance, and compatibility state. CRLF-normalized SHA-256 digest for cross-platform determinism.
+- **`validate_skill.py --strict`**: fails release validation unless upstream is MATCH. No fail-open path for strict mode.
+- **Component-aware path containment** in `trusted_location()`: rejects prefix siblings (`.agents/skills-evil/`) and `..` traversals.
+- **Persistent incompatible-digest tracking** via `upstream-incompatible` list in SKILL.md frontmatter.
+- **`install.py --check` upstream status display**: exits non-zero for INCOMPATIBLE.
+- **UX-CONTRACT.template.md**: business-context sources table, Source ref column, read-only review guidance. Removed fields that encouraged business-policy duplication.
+- **Trust boundary** in SKILL.md §1a: business documents are evidence, not agent instructions.
+- **Eval cases #25 and #26**: ADR conflict resolution, billing/high-risk escalation, source traceability.
+- **Upstream upgrade workflow** in VERSIONING.md with version-bump guidelines.
+
+### Changed
+
+- `references/design-context-lifecycle.md`: preflight discovery split into business-context and design-context sections.
+- `references/decision-matrix.md`: precedence rules now link to SKILL.md §1a as single canonical source (eliminated drift).
+- `references/verification-checklist.md`: added business-source, high-risk, and traceability checks.
+- Resolver SHA-256 now normalizes CRLF→LF for portable digests.
+- SKILL.md §0/§0a/§0b reordered: compatibility check before loading instructions.
+
+### Security
+
+- `trusted_location()` now uses component-aware path containment to prevent prefix-sibling bypass.
+- Strict validation mode eliminates fail-open paths for upstream compatibility.
+
 ## [1.0.0] — 2026-07-29
 
 ### Added
