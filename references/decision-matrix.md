@@ -76,6 +76,32 @@ Never use browser `confirm()`. Do not put the safe and dangerous actions next to
 
 Never hide fields or actions silently. The same permission, status, order, and business operation must survive the responsive representation.
 
+## Source conflict and precedence
+
+When two authoritative sources disagree or a maintained document appears stale:
+
+1. Check the repository's own context index or contributor conventions for an explicit conflict-resolution rule.
+2. If no explicit rule exists, apply: verified server/API/domain invariant > maintained ADR/PRD > inferred evidence.
+3. A stale document (verified date older than a known re-architecture) must not silently win over current code evidence.
+4. If conflict persists after applying precedence, surface it explicitly and block the affected decision branch — do not average, guess, or silently pick a winner.
+5. When the conflict is resolved, record the resolution in the relevant contract (`UX-CONTRACT.md` or equivalent) with a reference to the authoritative source and the date reviewed.
+
+## High-risk escalation — must not use defaults
+
+Defaults in this skill are safe for ordinary UX choices. They must **not** be applied when unresolved evidence affects:
+
+| Category | Why no default | Expected action |
+|----------|---------------|----------------|
+| Permissions or security | Wrong rule is a data-exposure bug | Read the permission policy / ADR; ask if ambiguous |
+| Money, billing, or payment | Cost or financial liability | Read the billing spec / ADR; ask before implementing |
+| Privacy, retention, or PII | Regulatory or trust failure | Read the privacy policy / contract; ask if ambiguous |
+| Irreversible lifecycle changes | Hard-delete, deactivate, archive with consequences | Read the domain lifecycle / state-transition spec |
+| Legal or regulatory copy | Liability from wrong wording | Read the legal brief / product spec; ask before writing |
+| Non-idempotent external side effects | Double-dispatch, email, webhook, charge | Read the API contract; do not optimistically retry |
+| Shared domain workflow / state transitions | Business logic error | Read the domain ADR / state machine spec |
+
+If the authoritative source is unavailable and the decision cannot be deferred, use the available grilling/decision workflow. If neither is available, ask **one compact blocking question** that pauses only the affected decision branch. Do not fall through to generic defaults for these categories.
+
 ## Ask vs infer
 
 Ask when the answer changes API contracts, routing, irreversible side effects, permissions, legal copy, locale/calendar/timezone meaning, conflict/offline guarantees, or user-visible workflow shared by many screens.

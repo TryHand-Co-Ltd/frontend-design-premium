@@ -10,6 +10,18 @@
 - Timezone/calendar policy:
 - Accessibility target: WCAG 2.2 AA
 
+## Business-context sources
+
+Record the authoritative sources that ground the UI behavior in this contract. Do **not** copy business policy into this file; reference the maintained source instead.
+
+| Domain / scope | Authoritative source | Source type | Reviewed date |
+|---|---|---|---|
+| Permission model | _path / ADR number_ | ADR / Permission policy | |
+| Data lifecycle | _path / API contract_ | API / Domain spec | |
+| Deletion / retention | _path_ | Privacy policy / ADR | |
+| Billing / payment | _path_ | Billing spec | |
+| Legal / regulatory copy | _path_ | Product brief / Legal review | |
+
 ## Visual contract
 
 - Project `DESIGN.md`:
@@ -45,17 +57,17 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 
 ## Flow ledger
 
-| Operation | Trigger | Pending | Success destination | Success feedback | Failure recovery | Focus outcome |
-|---|---|---|---|---|---|---|
-| Create | | | | | | |
-| Edit | | | | | | |
-| Delete | | | | | | |
-| Search | | | | | | |
-| Bulk action | | | | | | |
-| Upload/background job | | | | | | |
-| Cancel/back | | | | | | |
-| Soft-delete | | | | | | |
-| Hard-delete (irreversible) | | | | | | |
+| Operation | Trigger | Pending | Success destination | Success feedback | Failure recovery | Focus outcome | Source ref |
+|---|---|---|---|---|---|---|---|
+| Create | | | | | | | |
+| Edit | | | | | | | |
+| Delete | | | | | | | |
+| Search | | | | | | | |
+| Bulk action | | | | | | | |
+| Upload/background job | | | | | | | |
+| Cancel/back | | | | | | | |
+| Soft-delete | | | | | | | |
+| Hard-delete (irreversible) | | | | | | | |
 
 ## Navigation and responsive behavior
 

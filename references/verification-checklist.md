@@ -2,9 +2,17 @@
 
 Use this before finishing every implementation or review. Mark non-applicable items mentally; do not dump the checklist into the user response.
 
-## Dependency and design context
+## Dependency, business context, and design context
 
 - [ ] The current installed `frontend-design` skill was loaded completely.
+- [ ] **Business-context entry points** were located and relevant sources read before design work:
+      PRD, ADR, CONTEXT.md, domain/API contracts, permission policy, or equivalent.
+- [ ] Authoritative policy was distinguished from implementation evidence using the
+      precedence table (`SKILL.md §1a`).
+- [ ] Conflicting authoritative sources were surfaced explicitly — not silently inferred.
+- [ ] **High-risk categories** (permissions, billing, privacy, irreversible operations, legal copy,
+      non-idempotent side effects, domain state transitions) were resolved from authoritative
+      sources or escalated — never through generic defaults.
 - [ ] Project `DESIGN.md` and any maintained product/UX contract were read before planning.
 - [ ] A missing `DESIGN.md` was appropriately created for a new/substantial application task, or intentionally not created for a throwaway/read-only scope.
 - [ ] Existing visual identity was not silently overwritten for one feature.
@@ -96,6 +104,13 @@ Use this before finishing every implementation or review. Mark non-applicable it
 - [ ] Inline alert/page banner/global banner/toast scope matches the persistence and recovery need.
 - [ ] Notification badges have accessible counts, stable geometry, and a defined mark-as-read policy.
 - [ ] Audit timelines expose actor/action/time/timezone in text; presence is labeled, fresh enough, and privacy-safe.
+
+## Business-source traceability (UX-CONTRACT.md)
+
+- [ ] `UX-CONTRACT.md` records UI consequences only — business policy is referenced, not duplicated.
+- [ ] Each authoritative business rule has a source reference (ADR path, API contract, permission policy).
+- [ ] Flow-ledger entries include a source reference where the behavior originates from business policy.
+- [ ] The business-context sources table is populated for permission model, data lifecycle, deletion, billing, and legal copy.
 
 ## Locale
 

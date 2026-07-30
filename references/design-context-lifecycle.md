@@ -18,11 +18,28 @@ Do not force a marketing register onto a product surface. Classify the surface b
 
 ## Preflight discovery
 
-Before visual planning:
+Before visual planning, discover both the business and design context of the project:
+
+### Business-context sources
+
+1. Locate the repository's maintained business-evidence entry points:
+   - PRD / `PRODUCT.md` / business brief;
+   - `CONTEXT.md` or a repository context index;
+   - ADRs / architecture decision records that describe lifecycle, permission, or domain rules;
+   - domain/API contracts (OpenAPI, GraphQL schema, or equivalent);
+   - permission/security policy documents;
+   - maintained equivalents with project-specific names.
+2. Read only sources relevant to the requested workflow.
+3. Distinguish authoritative policy from implementation evidence using the precedence table in `SKILL.md §1a`.
+4. When two authoritative sources conflict or appear stale, surface the conflict explicitly — do not silently infer.
+
+The agent must not proceed to visual planning before the business context is grounded. Upstream `frontend-design` receives a brief grounded in authoritative product context, not default assumptions.
+
+### Design-context sources
 
 1. Locate `DESIGN.md` from the project root or nearest documented workspace root.
 2. Look for existing equivalents such as a design-system guide, brand guide, token documentation, Figma variable export, Storybook, or theme package.
-3. Read product context: brief, PRD, `PRODUCT.md`, route map, supported locales, accessibility target, and comparable screens.
+3. Read product design context: existing DESIGN.md, route map, supported locales, accessibility target, and comparable screens.
 4. Inspect implementation sources: CSS variables, Tailwind/theme config, typography setup, spacing/radius/elevation tokens, icon library, motion utilities, shared components, charts, and theme switching.
 5. When a runnable UI exists, inspect representative rendered screens at a narrow phone and small laptop/desktop width. Code declarations alone do not prove the visual result.
 

@@ -204,6 +204,21 @@ def _do_check() -> int:
     if not upstream_installed_for:
         print(f"WARNING: upstream '{UPSTREAM_NAME}' is not installed for any target.", file=sys.stderr)
         print(f"  Install upstream separately (this script does not install {UPSTREAM_NAME}).", file=sys.stderr)
+    else:
+        # Show upstream compatibility status
+        try:
+            sys.path.insert(0, str(SOURCE / "scripts"))
+            from resolve_frontend_design import compatibility_status, find_skill
+            upstream = find_skill()
+            if upstream:
+                compat = compatibility_status(upstream)
+                state = compat.get("status", "?")
+                msg = compat.get("message", "")
+                print(f"  upstream: {' '.join(UPSTREAM_TARGETS)} [{state}]")
+                if state != "MATCH":
+                    print(f"    {msg}")
+        except Exception as error:
+            print(f"  upstream status check unavailable: {error}")
     return 0
 
 

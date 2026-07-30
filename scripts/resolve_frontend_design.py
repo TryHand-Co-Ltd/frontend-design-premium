@@ -118,6 +118,203 @@ def remote_status(local: Path) -> dict[str, object]:
     return result
 
 
+
+
+
+def _parse_frontmatter_value(text: str, key: str) -> str | None:
+    """Extract a quoted scalar value from YAML frontmatter by key.
+
+    Handles:
+      key: "value"
+      key: 'value'
+      key: value
+    within the frontmatter block. Returns None if not found.
+    """
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith(f"{key}:"):
+            value = stripped[len(key) + 1:].strip()
+            if value.startswith('"') and value.endswith('"') and len(value) >= 2:
+                return value[1:-1]
+            if value.startswith("'") and value.endswith("'") and len(value) >= 2:
+                return value[1:-1]
+            return value
+    return None
+
+
+def _parse_frontmatter_list(text: str, key: str) -> list[str]:
+    """Extract a YAML list from frontmatter by key.
+
+    Handles:
+      key:
+        - "item1"
+        - item2
+    Returns empty list if not found.
+    """
+    lines = text.splitlines()
+    result: list[str] = []
+    in_block = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith(f"{key}:"):
+            in_block = True
+            continue
+        if in_block:
+            if not stripped or not stripped.startswith("-"):
+                # Reached next key or end of frontmatter
+                if stripped and ":" in stripped.split(None, 1)[0]:
+                    in_block = False
+                    break
+                continue
+            item = stripped[1:].strip()
+            if item.startswith('"') and item.endswith('"') and len(item) >= 2:
+                item = item[1:-1]
+            elif item.startswith("'") and item.endswith("'") and len(item) >= 2:
+                item = item[1:-1]
+            if item:
+                result.append(item)
+    return result
+
+
+def load_tested_revisions() -> dict[str, str]:
+    """Read tested-upstream metadata from SKILL.md frontmatter."""
+    premium_skill = Path(__file__).resolve().parents[1] / "SKILL.md"
+    if not premium_skill.is_file():
+        return {}
+    try:
+        text = premium_skill.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return {}
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---\n", 4)
+    if end < 0:
+        return {}
+    frontmatter = text[4:end]
+
+    revisions: dict[str, str] = {}
+    for line in frontmatter.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("digest:"):
+            value = stripped[len("digest:"):].strip().strip('"')
+            if value and len(value) > 10:
+                revisions[value] = "recorded"
+    return revisions
+
+
+def load_incompatible_digests() -> list[str]:
+    """Read incompatible-digests list from SKILL.md frontmatter."""
+    premium_skill = Path(__file__).resolve().parents[1] / "SKILL.md"
+    if not premium_skill.is_file():
+        return []
+    try:
+        text = premium_skill.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return []
+    if not text.startswith("---\n"):
+        return []
+    end = text.find("\n---\n", 4)
+    if end < 0:
+        return []
+    frontmatter = text[4:end]
+
+    result: list[str] = []
+    in_block = False
+    for line in frontmatter.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("upstream-incompatible:"):
+            in_block = True
+            continue
+        if in_block:
+            if not stripped or not stripped.startswith("-"):
+                if ":" in stripped.split(None, 1)[0]:
+                    in_block = False
+                break
+            item = stripped[1:].strip().strip('"').strip("'")
+            if item:
+                result.append(item)
+    return result
+
+
+SUPPORTED_ROOTS: list[Path] = [
+    Path.home() / ".agents" / "skills",
+    Path.home() / ".claude" / "skills",
+    Path.home() / ".pi" / "agent" / "skills",
+]
+
+
+def trusted_location(path: Path) -> bool:
+    """Return True if the candidate lives under a supported skill root."""
+    try:
+        resolved = path.resolve()
+    except (OSError, RuntimeError):
+        return False
+    resolved_normalized = os.path.normcase(str(resolved))
+    return any(
+        resolved_normalized.startswith(os.path.normcase(str(root)))
+        for root in SUPPORTED_ROOTS
+    )
+
+
+def compatibility_status(
+    found: Path,
+    tested_revisions: dict[str, str] | None = None,
+    incompatible_digests: list[str] | None = None,
+) -> dict[str, str]:
+    """Determine the compatibility state of the installed upstream.
+
+    Returns a dict with keys: status, message, digest, path.
+    """
+    if tested_revisions is None:
+        tested_revisions = load_tested_revisions()
+    if incompatible_digests is None:
+        incompatible_digests = load_incompatible_digests()
+    incompatible_set = set(incompatible_digests)
+
+    result: dict[str, str] = {
+        "path": str(found),
+        "digest": sha256(found.read_bytes()),
+    }
+    current_digest = result["digest"]
+
+    # Check INCOMPATIBLE first — it overrides all other states
+    if current_digest in incompatible_set:
+        result["status"] = "INCOMPATIBLE"
+        result["message"] = (
+            "This upstream revision is known to break premium contracts. "
+            "Upgrade to a compatible revision before using premium."
+        )
+        return result
+
+    if not trusted_location(found):
+        result["status"] = "UNTRUSTED"
+        result["message"] = (
+            f"Upstream candidate is not in a supported skill root: {found}"
+        )
+        return result
+
+    if not tested_revisions:
+        result["status"] = "UNTESTED"
+        result["message"] = (
+            "No tested revision recorded in premium metadata. "
+            "Run compatibility validation before release."
+        )
+        return result
+
+    if current_digest in tested_revisions:
+        result["status"] = "MATCH"
+        result["message"] = f"Installed upstream matches tested revision."
+    else:
+        result["status"] = "UNTESTED"
+        result["message"] = (
+            f"Installed upstream digest {current_digest[:16]}... is not in the "
+            f"tested-revision list. Run compatibility validation before release."
+        )
+
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--path", help="Explicit frontend-design directory or SKILL.md")
@@ -125,6 +322,11 @@ def main() -> int:
     output.add_argument("--print-path", action="store_true", help="Print only the path")
     output.add_argument("--print-content", action="store_true", help="Print the full SKILL.md")
     output.add_argument("--json", action="store_true", help="Print machine-readable details")
+    output.add_argument(
+        "--status",
+        action="store_true",
+        help="Report upstream compatibility status and exit",
+    )
     parser.add_argument(
         "--check-remote",
         action="store_true",
@@ -134,6 +336,15 @@ def main() -> int:
 
     found = find_skill(args.path)
     if not found:
+        if args.status:
+            result = {
+                "status": "MISSING",
+                "message": "frontend-design could not be located",
+                "path": None,
+                "digest": None,
+            }
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 2
         checked = "\n  - ".join(str(path) for path in candidate_paths(args.path))
         print(
             "frontend-design was not found. Install the upstream skill or set "
@@ -149,6 +360,12 @@ def main() -> int:
     }
     if args.check_remote:
         details["upstream"] = remote_status(found)
+
+    if args.status:
+        compat = compatibility_status(found)
+        compat["sha256"] = details["sha256"]
+        print(json.dumps(compat, ensure_ascii=False, indent=2))
+        return 0 if compat["status"] == "MATCH" else 1
 
     if args.print_content:
         print(found.read_text(encoding="utf-8"), end="")

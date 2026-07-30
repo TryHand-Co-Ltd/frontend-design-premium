@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import subprocess
@@ -45,6 +46,14 @@ def frontmatter(text: str) -> dict[str, str]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail on UNTESTED, MISSING, UNTRUSTED, or INCOMPATIBLE upstream",
+    )
+    args, _ = parser.parse_known_args()
+
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -184,14 +193,27 @@ def main() -> int:
             except subprocess.TimeoutExpired:
                 warnings.append("designmd lint skipped — timed out")
 
+    upstream_status_ok = True
     try:
-        from resolve_frontend_design import find_skill
+        from resolve_frontend_design import compatibility_status, find_skill
 
         upstream = find_skill()
         if upstream:
-            print(f"upstream: {upstream}")
+            compat = compatibility_status(upstream)
+            state = compat.get("status", "UNKNOWN")
+            print(f"upstream: {upstream}  [{state}]")
+            if args.strict and state not in ("MATCH",):
+                errors.append(
+                    f"upstream compatibility: {state} — {compat.get('message', '')}"
+                )
+                upstream_status_ok = False
         else:
-            warnings.append("frontend-design dependency is not currently discoverable")
+            msg = "frontend-design dependency is not currently discoverable"
+            if args.strict:
+                errors.append(msg)
+            else:
+                warnings.append(msg)
+            upstream_status_ok = False
     except Exception as error:  # validation should report, not crash on resolver problems
         warnings.append(f"could not run dependency resolver: {error}")
 
