@@ -168,6 +168,18 @@
       "files": [
         "fixtures/overlay-stack-chaos.tsx"
       ]
+    },
+    {
+      "id": 25,
+      "prompt": "Implement a user-deactivation flow for an admin panel. The ADR says deactivation is reversible for 30 days and only Owners can perform it. The existing code has a hard-delete endpoint. There is no permission-policy document. Decide what to build and document the rationale.",
+      "expected_output": "Discovers ADR and domain evidence before visual planning. Distinguishes authoritative policy (ADR: reversible deactivation, Owner-only) from implementation evidence (hard-delete endpoint). Acknowledges ADR is already authoritative for the Owner-only rule (no escalation needed for permission). Surfaces the conflict between ADR lifecycle (reversible deactivation) and existing code (hard-delete endpoint). Records source references in UX-CONTRACT.md without copying business policy. Does not ask the user about decisions already settled by authoritative evidence.",
+      "files": []
+    },
+    {
+      "id": 26,
+      "prompt": "Design a billing settings page for an existing SaaS. The product has ADR-007 describing subscription lifecycle (trial→active→expired→cancelled). The API contract exposes an idempotent cancellation endpoint. There is no billing-spec document. Handle the cancel-subscription workflow.",
+      "expected_output": "Discovers ADR-007 and the API contract before designing. Recognises billing/payment as a high-risk category that must not use generic defaults. Reads ADR lifecycle transitions and API idempotency guarantees. Resolves that cancellation is idempotent and server-confirmed (pessimistic mutation). Does not implement optimistic cancellation. Records the authoritative source references in UX-CONTRACT.md (ADR-007, API contract path) rather than duplicating the subscription rules. Treats missing billing-spec as an escalated gap.",
+      "files": []
     }
   ]
 }

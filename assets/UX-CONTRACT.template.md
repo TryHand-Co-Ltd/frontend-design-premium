@@ -1,6 +1,8 @@
 # UX Contract
 
 > Keep this file only when the project needs a durable cross-screen contract. Replace examples with real product decisions.
+>
+> **Read-only review:** When performing a read-only contract audit, report gaps without creating or modifying this file. Identify missing source references or untraced UI consequences in the audit output, not by editing the contract.
 
 ## Product context
 
@@ -9,6 +11,18 @@
 - Active locales:
 - Timezone/calendar policy:
 - Accessibility target: WCAG 2.2 AA
+
+## Business-context sources
+
+Record the authoritative sources that ground the UI behavior in this contract. Do **not** copy business policy into this file; reference the maintained source instead.
+
+| Domain / scope | Authoritative source | Source type | Reviewed date |
+|---|---|---|---|
+| Permission model | _path / ADR number_ | ADR / Permission policy | |
+| Data lifecycle | _path / API contract_ | API / Domain spec | |
+| Deletion / retention | _path_ | Privacy policy / ADR | |
+| Billing / payment | _path_ | Billing spec | |
+| Legal / regulatory copy | _path_ | Product brief / Legal review | |
 
 ## Visual contract
 
@@ -45,17 +59,17 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 
 ## Flow ledger
 
-| Operation | Trigger | Pending | Success destination | Success feedback | Failure recovery | Focus outcome |
-|---|---|---|---|---|---|---|
-| Create | | | | | | |
-| Edit | | | | | | |
-| Delete | | | | | | |
-| Search | | | | | | |
-| Bulk action | | | | | | |
-| Upload/background job | | | | | | |
-| Cancel/back | | | | | | |
-| Soft-delete | | | | | | |
-| Hard-delete (irreversible) | | | | | | |
+| Operation | Trigger | Pending | Success destination | Success feedback | Failure recovery | Focus outcome | Source ref |
+|---|---|---|---|---|---|---|---|
+| Create | | | | | | | |
+| Edit | | | | | | | |
+| Delete | | | | | | | |
+| Search | | | | | | | |
+| Bulk action | | | | | | | |
+| Upload/background job | | | | | | | |
+| Cancel/back | | | | | | | |
+| Soft-delete | | | | | | | |
+| Hard-delete (irreversible) | | | | | | | |
 
 ## Navigation and responsive behavior
 
@@ -76,7 +90,8 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 - Tooltip delay/dismissal:
 - Unsaved-changes behavior:
 - Layer/z-index contract (dialog > drawer > popover > toast stacking order):
-- Soft-delete vs hard-delete policy (reversible/logged vs permanent):
+
+> Deletion/retention lifecycle is recorded in **Business-context sources** above, not duplicated here.
 
 ## Async and resilience
 
@@ -100,9 +115,10 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 ## Permission and clipboard
 
 - Permission UI strategy (hide vs disable vs 403 page):
-- Role-based feature access map:
 - Clipboard copy policy (truncated preview + copy button, no secret in toast):
 - Disabled-state explanation (tooltip with reason):
+
+> Permission/role policy is recorded in **Business-context sources** above. This section records only the UI consequences (hide vs disable, accessible explanation, clipboard access).
 
 ## Migration status (only for an inconsistent established product)
 

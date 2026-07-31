@@ -25,9 +25,33 @@ Given version `MAJOR.MINOR.PATCH`:
 - `scripts/` validators and installers
 - `evals/` eval cases and fixtures
 
+## Upstream `frontend-design` version handling
+
+Premium loads the upstream at runtime and does not vendor or pin it. To maintain reproducible behavior, premium records a tested upstream content digest and revision label.
+
+| Event | Required action | Version bump |
+|-------|---------------|-------------|
+| Upstream installed/reinstalled with same digest | No action | None |
+| Upstream upgraded, digest unchanged | No action | None |
+| Upstream upgraded, digest changed, behavioral diff is **cosmetic only** | Run evals, confirm, update `upstream-tested.digest` in SKILL.md | PATCH |
+| Upstream upgraded, digest changed, **observable change** in visual direction, subject/audience inference, or planning verbosity | Run full evals, review diffs against 6+ project baselines, update tested digest | MINOR |
+| Upstream upgraded, digest changed, **breaking change** to premium contract precedence, safety invariants, or access rules | Run full compatibility eval, update tested digest, document migration | MAJOR |
+
+### Upgrade workflow
+
+When upstream changes:
+
+1. Upgrade `frontend-design` separately in a controlled environment using the target harness.
+2. Run `python scripts/resolve_frontend_design.py --status` to get the new fingerprint.
+3. Run `python scripts/validate_skill.py` for structural validation.
+4. Run the eval suite and compare outputs against the previous tested upstream.
+5. Review changed outputs: business-context grounding, register classification, visual direction, DESIGN.md content.
+6. If changes are acceptable, update `upstream-tested.digest` in SKILL.md frontmatter.
+7. Bump premium version per the table above.
+8. Update CHANGELOG with the upstream revision and summary of behavioral changes.
+
 ## What versioning does NOT cover
 
-- Upstream `frontend-design` skill changes (handled by runtime loading)
 - Individual project `DESIGN.md` files (project-specific, not part of the skill)
 - Internal script changes that don't change the agent's behavior (e.g., reconcile_check.py improvements)
 
@@ -36,7 +60,7 @@ Given version `MAJOR.MINOR.PATCH`:
 Before tagging a release:
 
 1. `npx -p @google/design.md designmd lint assets/DESIGN.template.md` — **0 errors, 0 warnings**
-2. `python scripts/validate_skill.py` — PASS
+2. `python scripts/validate_skill.py --strict` — PASS (checks upstream compatibility)
 3. `uvx --from skills-ref agentskills.exe validate $PWD` — PASS
 4. Internal markdown links — no broken links (ignore regex false positives in code blocks)
 5. `python scripts/install.py --check` — all targets MATCH
