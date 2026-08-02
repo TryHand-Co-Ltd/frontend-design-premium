@@ -4,12 +4,12 @@ description: Production UX and durable design-context layer that must be used to
 compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
 metadata:
   author: frontend-design-premium contributors
-  version: "1.1.0"
+  version: "1.2.0"
   upstream-skill: frontend-design
   upstream-tested:
     revision: "2026-02 — initial compatibility"
     digest: "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
-    tested-with-premium: "1.1.0"
+    tested-with-premium: "1.2.0"
   upstream-incompatible: []
   compatibility-policy:
     strict-on-release: true
@@ -19,6 +19,9 @@ metadata:
 # Frontend Design Premium
 
 Treat `frontend-design` as the visual-design base, project-root `DESIGN.md` as durable taste memory, and this skill as the production-behavior contract. Deliver a UI that is distinctive, operationally coherent, and consistent across future screens and agent sessions.
+
+When this skill is used from a Pilot repository, also follow
+`references/pilot-review.md` for pull-request finding levels and pass criteria.
 
 ## 0. Load the upstream skill first
 

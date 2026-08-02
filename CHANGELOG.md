@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.0 - 2026-08-02
+
+### Added
+
+- Machine-readable Pilot integration metadata with an exact tested upstream
+  commit and digest.
+- A Pilot-specific semantic review policy with objective P0-P3 thresholds.
+
+### Changed
+
+- The skill now routes Pilot pull-request reviews through the shared review
+  policy while keeping merge enforcement flexible.
+
+### Fixed
+
+- `scripts/reconcile_check.py` is now a portable project-root CLI instead of a
+  development-only script containing hard-coded Windows workspace paths.
+
 All notable changes to this skill are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).

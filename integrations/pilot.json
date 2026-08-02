@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "skill": {
+    "name": "frontend-design-premium",
+    "version": "1.2.0"
+  },
+  "upstream": {
+    "repository": "anthropics/skills",
+    "path": "skills/frontend-design",
+    "revision": "b29e7cf65e5cb78a5ac33d582270551bc74a14eb",
+    "skill_sha256": "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
+  },
+  "pilot": {
+    "wrapper_name": "pilot-frontend-design",
+    "review_policy": "references/pilot-review.md",
+    "frontend_paths": [
+      "apps/web/**",
+      "DESIGN.md",
+      "UX-CONTRACT.md"
+    ],
+    "blocking_findings": [
+      "P0",
+      "P1",
+      "P2"
+    ],
+    "advisory_findings": [
+      "P3"
+    ]
+  }
+}

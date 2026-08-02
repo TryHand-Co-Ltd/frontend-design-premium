@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
 DESIGN_TEMPLATE = ROOT / "assets" / "DESIGN.template.md"
+PILOT_MANIFEST = ROOT / "integrations" / "pilot.json"
 
 
 def where_npx() -> str | None:
@@ -67,6 +68,9 @@ def main() -> int:
     except ValueError as error:
         errors.append(str(error))
         meta = {}
+
+    version_match = re.search(r'(?m)^\s+version:\s*["\']?([^"\'\n]+)', text)
+    skill_version = version_match.group(1).strip() if version_match else ""
 
     name = meta.get("name", "")
     description = meta.get("description", "")
@@ -123,11 +127,34 @@ def main() -> int:
         "assets/UX-CONTRACT.template.md",
         "references/e2e-audit-prompt.md",
         "references/electron-dual-surface.md",
+        "references/pilot-review.md",
         "evals/evals.json",
+        "integrations/pilot.json",
     ]
     for relative in expected:
         if not (ROOT / relative).is_file():
             errors.append(f"missing expected resource: {relative}")
+
+    if PILOT_MANIFEST.is_file():
+        try:
+            pilot = json.loads(PILOT_MANIFEST.read_text(encoding="utf-8"))
+            if pilot.get("schema_version") != 1:
+                errors.append("integrations/pilot.json schema_version must be 1")
+            skill = pilot.get("skill", {})
+            if skill.get("name") != name:
+                errors.append("integrations/pilot.json skill name does not match")
+            if skill.get("version") != skill_version:
+                errors.append("integrations/pilot.json skill version does not match")
+            upstream = pilot.get("upstream", {})
+            if not re.fullmatch(r"[0-9a-f]{40}", upstream.get("revision", "")):
+                errors.append("integrations/pilot.json upstream revision must be a full commit SHA")
+            if not re.fullmatch(r"[0-9a-f]{64}", upstream.get("skill_sha256", "")):
+                errors.append("integrations/pilot.json upstream digest must be SHA-256")
+            review_policy = pilot.get("pilot", {}).get("review_policy", "")
+            if not review_policy or not (ROOT / review_policy).is_file():
+                errors.append("integrations/pilot.json review policy is missing")
+        except (json.JSONDecodeError, OSError) as error:
+            errors.append(f"invalid integrations/pilot.json: {error}")
 
     eval_path = ROOT / "evals" / "evals.json"
     if eval_path.is_file():

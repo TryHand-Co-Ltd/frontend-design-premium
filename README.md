@@ -2,6 +2,12 @@
 
 A production UX Agent Skill that composes with Anthropic's [`frontend-design`](https://github.com/anthropics/skills/tree/main/skills/frontend-design) skill.
 
+Pilot projects can vendor an exact release together with the exact tested
+upstream snapshot. [`integrations/pilot.json`](integrations/pilot.json) is the
+machine-readable compatibility and review-policy contract used by the Pilot
+Base; [`references/pilot-review.md`](references/pilot-review.md) defines its
+P0-P3 semantic review levels.
+
 `frontend-design` provides the brief-specific visual direction. `frontend-design-premium` turns that direction into durable project context and adds the production behavior usually required by real applications: cross-screen consistency, data workflows, advanced inputs, resilient async states, localization, accessibility, layout stability, and verification.
 
 ## Why composition instead of a fork?
@@ -303,4 +309,3 @@ Before releasing a change:
 6. Re-run structural, link, token, accessibility, browser, and visual checks that apply to the change.
 
 Research sources and rationale are maintained in [`references/research-sources.md`](references/research-sources.md).
-
