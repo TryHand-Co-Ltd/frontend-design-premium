@@ -1,197 +1,118 @@
-"""Reconcile DESIGN.md against actual codebase — verify tokens, components, patterns."""
+#!/usr/bin/env python3
+"""Check a project's DESIGN.md against its frontend source tree.
+
+This is a portable structural check, not a visual reviewer. It catches an
+uninitialized design context, missing canonical sections, an empty source tree,
+and an explicitly supplied CSS file with no custom properties.
+"""
+
+from __future__ import annotations
+
+import argparse
 import re
+import sys
 from pathlib import Path
 
+CANONICAL_SECTIONS = (
+    "## Overview",
+    "## Colors",
+    "## Typography",
+    "## Layout",
+    "## Elevation & Depth",
+    "## Shapes",
+    "## Components",
+    "## Do's and Don'ts",
+)
+IGNORED_DIRECTORIES = {
+    ".git",
+    ".mypy_cache",
+    ".next",
+    ".pytest_cache",
+    ".ruff_cache",
+    "coverage",
+    "node_modules",
+}
 
-def scan_tokens(filepath):
-    """Extract CSS custom properties. Keeps the FIRST occurrence (light mode default)."""
-    text = Path(filepath).read_text(encoding="utf-8")
-    tokens = {}
-    for m in re.finditer(r"--([\w-]+)\s*:\s*([^;]+)", text):
-        key = m.group(1)
-        val = m.group(2).strip()
-        if key not in tokens:
-            tokens[key] = val
+
+def css_tokens(path: Path) -> dict[str, str]:
+    """Return the first value declared for each CSS custom property."""
+    text = path.read_text(encoding="utf-8")
+    tokens: dict[str, str] = {}
+    for match in re.finditer(r"--([\w-]+)\s*:\s*([^;]+)", text):
+        tokens.setdefault(match.group(1), match.group(2).strip())
     return tokens
 
 
-def scan_components(root, exclude_dirs=None):
-    if exclude_dirs is None:
-        exclude_dirs = {
-            "node_modules",
-            ".next",
-            "coverage",
-            ".git",
-            ".mypy_cache",
-            ".pytest_cache",
-            ".ruff_cache",
-        }
-    components = []
-    for p in Path(root).rglob("*.tsx"):
-        if any(part in p.parts for part in exclude_dirs):
-            continue
-        components.append(p.relative_to(root))
-    return components
-
-
-def check_tokens(design_frontmatter_keys, css_tokens):
-    all_ok = True
-    for name, expected in design_frontmatter_keys.items():
-        found = False
-        for css_key, css_val in css_tokens.items():
-            if name in css_key or css_key.endswith(name):
-                if expected.lower() in css_val.lower():
-                    found = True
-                    break
-        if not found:
-            all_ok = False
-            print(f"  FAIL {name}: {expected} -- NOT FOUND in CSS")
-    if all_ok:
-        print("  PASS: All token mappings verified")
-
-
-def check_components(comp_list, actual_comps):
-    missing = []
-    actual_strs = [str(c).replace("\\", "/") for c in actual_comps]
-    for comp in comp_list:
-        cl = comp.lower()
-        matched = False
-        for a in actual_strs:
-            if cl in a.lower():
-                matched = True
-                break
-        if not matched:
-            missing.append(comp)
-    print(
-        f"  Total: {len(comp_list)}, Missing: {len(missing)}, Matched: {len(comp_list) - len(missing)}"
-    )
-    if missing:
-        for m in missing:
-            print(f"    [MISSING] {m}")
-
-
-def check_patterns(text, patterns):
-    for p in patterns:
-        found = re.search(p, text, re.IGNORECASE)
-        status = "PASS" if found else "MISS"
-        print(f"  {status}: {p}")
-
-
-import sys
-import os
-sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
-
-def main():
-    # === jd-cv-matcher ===
-    print("=" * 60)
-    print("RECONCILIATION: jd-cv-matcher")
-    print("=" * 60)
-
-    design_text = Path("D:/Personal/jd-cv-matcher/DESIGN.md").read_text(encoding="utf-8")
-    css_tokens = scan_tokens("D:/Personal/jd-cv-matcher/src/styles/globals.css")
-    actual_comps = scan_components("D:/Personal/jd-cv-matcher/src")
-
-    print("\nToken mapping check:")
-    check_tokens(
-        {
-            "ink": "#1e2532",
-            "carbon": "#0f141e",
-            "signal-blue": "#1a91f0",
-            "success": "#1a7a4a",
-            "destructive": "#d64545",
-        },
-        css_tokens,
+def component_files(root: Path) -> list[Path]:
+    """Return TypeScript/JavaScript component files below a source root."""
+    suffixes = {".jsx", ".tsx", ".vue", ".svelte"}
+    return sorted(
+        path.relative_to(root)
+        for path in root.rglob("*")
+        if path.is_file()
+        and path.suffix in suffixes
+        and not any(part in IGNORED_DIRECTORIES for part in path.parts)
     )
 
-    print("\nComponent inventory check:")
-    check_components(
-        [
-            "button",
-            "card",
-            "badge",
-            "app-header",
-            "chat-panel",
-            "cv-multi-upload",
-            "analysis-results-view",
-            "ranking-table",
-            "charts",
-            "match-score-badge",
-            "skeleton",
-            "pdf-export",
-        ],
-        actual_comps,
-    )
 
-    print("\nPattern coverage:")
-    check_patterns(
-        design_text,
-        [
-            r"flat.*design",
-            r"border.*card",
-            r"signal.blue",
-            r"tabular.nums",
-            r"fade.in",
-            r"score.fil",
-            r"outfit|dm sans",
-            r"jetbrains",
-        ],
-    )
+def reconcile(design: Path, source: Path, css: Path | None) -> list[str]:
+    errors: list[str] = []
+    if not design.is_file():
+        return [f"design context does not exist: {design}"]
+    if not source.is_dir():
+        return [f"frontend source directory does not exist: {source}"]
 
-    # === Scopelytics ===
-    print("\n" + "=" * 60)
-    print("RECONCILIATION: Scopelytics")
-    print("=" * 60)
+    design_text = design.read_text(encoding="utf-8")
+    missing_sections = [section for section in CANONICAL_SECTIONS if section not in design_text]
+    if missing_sections:
+        errors.append("DESIGN.md is missing sections: " + ", ".join(missing_sections))
+    if re.search(r"(?m)^status:\s*uninitialized\s*$", design_text):
+        errors.append("DESIGN.md is still uninitialized")
+    if re.search(r"\[[^\]\n]{4,}\]", design_text):
+        errors.append("DESIGN.md still contains bracketed template prompts")
 
-    design_text2 = Path("D:/Workspace/scopelytics-ai-powered/DESIGN.md").read_text(encoding="utf-8")
-    css_tokens2 = scan_tokens("D:/Workspace/scopelytics-ai-powered/frontend/app/globals.css")
+    components = component_files(source)
+    if not components:
+        errors.append(f"no frontend component files found below {source}")
+    else:
+        print(f"components: {len(components)}")
 
-    print("\nToken mapping check:")
-    check_tokens(
-        {
-            "primary": "#0658f6",
-            "background": "#f8f8f8",
-            "foreground": "#151515",
-            "destructive": "#be123c",
-            "chart-4": "#22b0ff",
-            "muted-foreground": "#707070",
-        },
-        css_tokens2,
-    )
+    if css is not None:
+        if not css.is_file():
+            errors.append(f"CSS token source does not exist: {css}")
+        else:
+            tokens = css_tokens(css)
+            if not tokens:
+                errors.append(f"no CSS custom properties found in {css}")
+            else:
+                print(f"css custom properties: {len(tokens)}")
+    return errors
 
-    print("\nComponent inventory check:")
-    actual_comps2 = scan_components("D:/Workspace/scopelytics-ai-powered/frontend")
-    check_components(
-        [
-            "ui/button",
-            "ui/card",
-            "ui/dialog",
-            "auth/LoginForm",
-            "upload/FileUploader",
-            "layout/AppHeader",
-            "landing/HeroSection",
-            "dashboard/DashboardHeader",
-            "analysis/AnalysisWorkspace",
-            "admin/AdminShell",
-        ],
-        actual_comps2,
-    )
 
-    print("\nPattern coverage:")
-    check_patterns(
-        design_text2,
-        [
-            r"surface.card|backdrop.filter",
-            r"react.hook.form|react-hook-form",
-            r"i18n|locale|useHydrationSafeT",
-            r"recharts|chart",
-            r"sonner|toast",
-            r"prefers-reduced-motion",
-            r"google.*oauth|GoogleLoginButton",
-        ],
-    )
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("project", type=Path, help="project repository root")
+    parser.add_argument("--design", default="DESIGN.md", help="path relative to project")
+    parser.add_argument("--source", default="apps/web", help="frontend source path")
+    parser.add_argument("--css", help="optional CSS token file relative to project")
+    args = parser.parse_args()
 
-    print("\nDone. RECONCILIATION COMPLETE")
+    project = args.project.resolve()
+    design = project / args.design
+    source = project / args.source
+    css = project / args.css if args.css else None
+    try:
+        errors = reconcile(design, source, css)
+    except (OSError, UnicodeError) as error:
+        print(f"reconciliation failed: {error}", file=sys.stderr)
+        return 1
+    for error in errors:
+        print(f"ERROR: {error}", file=sys.stderr)
+    if errors:
+        return 1
+    print("DESIGN.md reconciliation passed")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -7,9 +7,9 @@
 | jd-cv-matcher | PERFECT | 10.2KB | 12/12 | 8/8 | 5/5 |
 | Scopelytics-ai-powered | GOOD | 15.4KB | 10/10* | 7/7 | 6/6* |
 
-> * Scopelytics CSS tokens verified manually: light mode values documented correctly.  
->   Script false negative due to dark mode CSS variable overrides in same file.  
-> * All 10 components exist in codebase (confirmed by direct file scan).  
+> * Scopelytics CSS tokens verified manually: light mode values documented correctly.
+>   Script false negative due to dark mode CSS variable overrides in same file.
+> * All 10 components exist in codebase (confirmed by direct file scan).
 >   Script false negative due to Path relative root matching.
 
 ## 2. Test Suite Results

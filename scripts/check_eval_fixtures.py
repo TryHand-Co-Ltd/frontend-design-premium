@@ -1,9 +1,12 @@
 """Check how many eval cases have fixture files vs empty files list."""
-import json, sys
+import json
+import sys
+from pathlib import Path
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-e = json.load(open('D:/Workspace/frontend-design-premium/evals/evals.json', encoding='utf-8'))
+root = Path(__file__).resolve().parents[1]
+e = json.loads((root / "evals" / "evals.json").read_text(encoding="utf-8"))
 cases = e.get('evals', [])
 print(f'Total eval cases: {len(cases)}')
 print()
