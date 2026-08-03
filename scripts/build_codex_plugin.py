@@ -66,6 +66,7 @@ def main() -> int:
 
     PREMIUM_OUT.mkdir(parents=True)
     shutil.copy2(ROOT / "SKILL.md", PREMIUM_OUT / "SKILL.md")
+    copy_tree(ROOT / "agents", PREMIUM_OUT / "agents")
     copy_tree(ROOT / "references", PREMIUM_OUT / "references")
     copy_tree(ROOT / "assets", PREMIUM_OUT / "assets")
     (PREMIUM_OUT / "scripts").mkdir()

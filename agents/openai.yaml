@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Design Premium"
+  short_description: "Production UX contracts for frontend apps"
+  default_prompt: "Use $frontend-design-premium with the upstream frontend-design skill to build or review this application UI with durable design context, consistent interaction behavior, accessibility, localization, and resilient states."
