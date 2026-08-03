@@ -45,6 +45,27 @@ python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
 The generated review archive is written to `dist/frontend-design-premium-codex-1.2.0.zip`.
 It bundles the tested upstream `frontend-design` snapshot and verifies its recorded digest during every build. See [`packaging/codex/README.md`](packaging/codex/README.md) for local marketplace testing.
 
+### Claude Code marketplace
+
+This repository is also a public Claude Code marketplace named `tryhand`.
+Install the self-contained plugin directly from GitHub:
+
+```bash
+claude plugin marketplace add TryHand-Co-Ltd/frontend-design-premium
+claude plugin install frontend-design-premium@tryhand
+```
+
+The Claude package bundles the same compatibility-tested upstream
+`frontend-design` snapshot. Build and validate it with:
+
+```bash
+python scripts/build_claude_plugin.py
+claude plugin validate --strict .
+claude plugin validate --strict packaging/claude/plugins/frontend-design-premium
+```
+
+See [`packaging/claude/README.md`](packaging/claude/README.md) for local testing and release details.
+
 ### 1. Check upstream dependency
 
 Verify the required `frontend-design` skill is installed:
