@@ -1,12 +1,16 @@
 # Changelog
 
-## 1.2.0 - 2026-08-02
+## 1.2.0 - 2026-08-03
 
 ### Added
 
 - Machine-readable Pilot integration metadata with an exact tested upstream
   commit and digest.
 - A Pilot-specific semantic review policy with objective P0-P3 thresholds.
+- A self-contained Codex skills-only plugin package, marketplace metadata,
+  listing asset, legal pages, and public-review test cases.
+- A deterministic Codex bundle builder that pins and verifies the compatible
+  upstream `frontend-design` snapshot.
 
 ### Changed
 
@@ -17,6 +21,8 @@
 
 - `scripts/reconcile_check.py` is now a portable project-root CLI instead of a
   development-only script containing hard-coded Windows workspace paths.
+- The upstream resolver now trusts a verified sibling skill bundled inside a
+  Codex plugin while preserving its supported-root checks.
 
 All notable changes to this skill are documented here.
 

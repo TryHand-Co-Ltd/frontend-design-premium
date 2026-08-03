@@ -1,8 +1,8 @@
 ---
 name: frontend-design-premium
 description: Production UX and durable design-context layer that must be used together with the upstream frontend-design skill when building, modifying, reviewing, or refactoring application UI. Use for dashboards, admin tools, SaaS screens, forms, tables, CRUD flows, multi-screen apps, design systems, and localized products—even when the request only says “build”, “implement”, or names one screen. Proactively creates or maintains project DESIGN.md taste context, enforces cross-screen behavioral consistency, resilient interaction states, localization, layout stability, accessibility, and verification.
-compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
 metadata:
+  compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
   author: frontend-design-premium contributors
   version: "1.2.0"
   upstream-skill: frontend-design

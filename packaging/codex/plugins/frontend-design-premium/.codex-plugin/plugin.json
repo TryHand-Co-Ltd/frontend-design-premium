@@ -1,0 +1,42 @@
+{
+  "name": "frontend-design-premium",
+  "version": "1.2.0",
+  "description": "Production UX contracts and durable design context for frontend implementation.",
+  "author": {
+    "name": "TryHand Co., Ltd",
+    "url": "https://github.com/TryHand-Co-Ltd"
+  },
+  "homepage": "https://github.com/TryHand-Co-Ltd/frontend-design-premium",
+  "repository": "https://github.com/TryHand-Co-Ltd/frontend-design-premium",
+  "license": "Apache-2.0",
+  "keywords": [
+    "frontend",
+    "ux",
+    "design-system",
+    "accessibility",
+    "localization"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Frontend Design Premium",
+    "shortDescription": "Production UX discipline for frontend agents",
+    "longDescription": "Adds durable design context, cross-screen behavioral consistency, resilient interaction states, accessibility, localization, and verification to frontend implementation workflows.",
+    "developerName": "TryHand Co., Ltd",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/TryHand-Co-Ltd/frontend-design-premium",
+    "privacyPolicyURL": "https://github.com/TryHand-Co-Ltd/frontend-design-premium/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/TryHand-Co-Ltd/frontend-design-premium/blob/main/TERMS.md",
+    "defaultPrompt": [
+      "Build this application UI with production UX contracts.",
+      "Review this frontend for UX consistency and resilience.",
+      "Create durable DESIGN.md and UX-CONTRACT.md context."
+    ],
+    "brandColor": "#4338CA",
+    "composerIcon": "./assets/logo.png",
+    "logo": "./assets/logo.png"
+  }
+}

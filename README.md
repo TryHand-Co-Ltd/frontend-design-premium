@@ -32,6 +32,19 @@ This skill therefore uses runtime composition:
 
 ## Quick start
 
+### Codex plugin package
+
+Build and validate the self-contained skills-only marketplace package:
+
+```bash
+python scripts/build_codex_plugin.py
+python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
+  dist/codex-marketplace/plugins/frontend-design-premium
+```
+
+The generated review archive is written to `dist/frontend-design-premium-codex-1.2.0.zip`.
+It bundles the tested upstream `frontend-design` snapshot and verifies its recorded digest during every build. See [`packaging/codex/README.md`](packaging/codex/README.md) for local marketplace testing.
+
 ### 1. Check upstream dependency
 
 Verify the required `frontend-design` skill is installed:

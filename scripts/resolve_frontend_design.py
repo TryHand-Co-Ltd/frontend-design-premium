@@ -284,6 +284,21 @@ SUPPORTED_ROOTS: list[Path] = [
 ]
 
 
+def bundled_plugin_skill_root() -> Path | None:
+    """Return the containing Codex plugin's skills root, when applicable."""
+    try:
+        skills_root = Path(__file__).resolve().parents[2]
+    except IndexError:
+        return None
+    plugin_root = skills_root.parent
+    if (
+        skills_root.name == "skills"
+        and (plugin_root / ".codex-plugin" / "plugin.json").is_file()
+    ):
+        return skills_root
+    return None
+
+
 def trusted_location(path: Path) -> bool:
     """Return True if the candidate lives under a supported skill root.
 
@@ -297,7 +312,11 @@ def trusted_location(path: Path) -> bool:
     except (OSError, RuntimeError):
         return False
     resolved_parts = os.path.normcase(str(resolved)).split(os.sep)
-    for root in SUPPORTED_ROOTS:
+    roots = list(SUPPORTED_ROOTS)
+    bundled_root = bundled_plugin_skill_root()
+    if bundled_root is not None:
+        roots.append(bundled_root)
+    for root in roots:
         try:
             root_resolved = root.resolve()
         except (OSError, RuntimeError):
