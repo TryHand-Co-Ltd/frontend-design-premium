@@ -19,6 +19,11 @@ claude plugin marketplace add .
 claude plugin install frontend-design-premium@tryhand
 ```
 
+The build also writes `dist/frontend-design-premium-claude-<version>.zip` and
+`dist/SHA256SUMS.claude` for release review. For a direct source installation
+that resolves a separately installed upstream skill, see the repository
+[`README.md`](../../README.md).
+
 Install from GitHub:
 
 ```bash

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Refreshed installation, packaging, validation, and upstream-compatibility
+  documentation to distinguish self-contained marketplace plugins from direct
+  source installations.
+
 ## 1.2.0 - 2026-08-03
 
 ### Added

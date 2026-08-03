@@ -8,7 +8,10 @@ Run from the repository root:
 python scripts/build_codex_plugin.py
 ```
 
-The builder creates a deterministic marketplace under `dist/codex-marketplace`, bundles the tested upstream `frontend-design` snapshot, validates its recorded digest, and writes a review ZIP plus SHA-256 checksums. Generated output is not committed.
+The builder creates a deterministic marketplace under `dist/codex-marketplace`,
+bundles the tested upstream `frontend-design` snapshot, validates its recorded
+digest, and writes a versioned review ZIP plus `SHA256SUMS.codex`. Generated
+output is not committed.
 
 Install the local preview with:
 
@@ -16,3 +19,7 @@ Install the local preview with:
 codex plugin marketplace add ./dist/codex-marketplace
 codex plugin add frontend-design-premium@tryhand-preview
 ```
+
+This package is self-contained. For a direct source installation that follows
+the currently installed upstream skill instead, see the repository
+[`README.md`](../../README.md).

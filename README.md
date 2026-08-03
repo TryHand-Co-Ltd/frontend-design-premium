@@ -2,6 +2,11 @@
 
 A production UX Agent Skill that composes with Anthropic's [`frontend-design`](https://github.com/anthropics/skills/tree/main/skills/frontend-design) skill.
 
+For end users, install the published self-contained plugin from the Codex or
+Claude Code marketplace. For local development, CI, or an unsupported harness,
+install the source skill directly with `scripts/install.py`; that route resolves
+an independently installed upstream `frontend-design` skill at runtime.
+
 Pilot projects can vendor an exact release together with the exact tested
 upstream snapshot. [`integrations/pilot.json`](integrations/pilot.json) is the
 machine-readable compatibility and review-policy contract used by the Pilot
@@ -25,14 +30,18 @@ This skill therefore uses runtime composition:
 
 ## Requirements
 
-- A separately installed `frontend-design` Agent Skill.
-- Python 3 for the bundled resolver, installer, and validator.
+- **Marketplace plugin:** its tested `frontend-design` snapshot is bundled; no
+  separate upstream install is needed.
+- **Direct source installation:** a separately installed `frontend-design`
+  Agent Skill and Python 3 for the resolver, installer, and validator.
 - Node.js only when running the optional Google DESIGN.md CLI.
 - `uvx` only when running the official Agent Skills reference validator.
 
 ## Quick start
 
-### Codex plugin package
+### Marketplace plugins (recommended)
+
+#### Codex
 
 Build and validate the self-contained skills-only marketplace package:
 
@@ -45,7 +54,7 @@ python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
 The generated review archive is written to `dist/frontend-design-premium-codex-1.2.0.zip`.
 It bundles the tested upstream `frontend-design` snapshot and verifies its recorded digest during every build. See [`packaging/codex/README.md`](packaging/codex/README.md) for local marketplace testing.
 
-### Claude Code marketplace
+#### Claude Code
 
 This repository is also a public Claude Code marketplace named `tryhand`.
 Install the self-contained plugin directly from GitHub:
@@ -66,7 +75,13 @@ claude plugin validate --strict packaging/claude/plugins/frontend-design-premium
 
 See [`packaging/claude/README.md`](packaging/claude/README.md) for local testing and release details.
 
-### 1. Check upstream dependency
+### Direct source installation
+
+Use this route when developing the skill, integrating it into CI, or using a
+harness without marketplace plugins. Unlike the packages above, it requires a
+separate `frontend-design` installation.
+
+#### 1. Check upstream dependency
 
 Verify the required `frontend-design` skill is installed:
 
@@ -89,7 +104,7 @@ cd ~/frontend-design-premium
 python scripts/install.py --target all
 ```
 
-### 2. Install this skill
+#### 2. Install this skill
 
 ```bash
 # Single target
@@ -103,11 +118,11 @@ The installer prefers a **symlink** so repository edits stay live. On Windows it
 
 Restart the harness if it does not support live skill discovery.
 
-### 3. CLI reference
+#### 3. CLI reference
 
 | Command | What it does |
 |---------|-------------|
-| `python scripts/install.py --version` | Print skill version (`v1.0.0`) |
+| `python scripts/install.py --version` | Print skill version (`v1.2.0`) |
 | `python scripts/install.py --check` | Compare source version against each installed target |
 | `python scripts/install.py --list-targets` | Show install status per harness (link type + version) |
 | `python scripts/install.py --target agents` | Install to `.agents/skills/` (default) |
@@ -120,7 +135,7 @@ Restart the harness if it does not support live skill discovery.
 > **Author (live edits):** `--target all` once. No reinstall needed — symlink/junction sees repo changes immediately.
 > **Consumer (pull updates):** `python scripts/install.py --upgrade` fetches latest changes and reinstalls. If source is not a git repo, `--upgrade` skips pull and reinstalls from current source.
 
-### 4. Use the skill
+#### 4. Use the skill
 
 A short request is sufficient:
 
@@ -136,7 +151,7 @@ To debug dependency loading in a harness that supports stacked skills:
 
 Normal use should not require manual stacking because the premium skill explicitly loads its upstream dependency.
 
-### 5. Team installation
+#### 5. Team installation
 
 **Author flow** (one person per team):
 
@@ -249,7 +264,14 @@ Patterns are conditional. The skill does not force every component or interactio
 
 ```text
 frontend-design-premium/
+├── agents/
+│   └── openai.yaml
 ├── CHANGELOG.md
+├── integrations/
+│   └── pilot.json
+├── packaging/
+│   ├── claude/                     # Claude Code marketplace source
+│   └── codex/                      # Codex marketplace source + upstream vendor
 ├── SKILL.md
 ├── VERSIONING.md
 ├── assets/
@@ -292,6 +314,8 @@ frontend-design-premium/
 │   ├── token-mapping.md
 │   └── verification-checklist.md
 └── scripts/
+    ├── build_claude_plugin.py
+    ├── build_codex_plugin.py
     ├── check_eval_fixtures.py
     ├── install.py
     ├── reconcile_check.py
@@ -312,6 +336,11 @@ python scripts/validate_skill.py
 ```
 
 It checks frontmatter, directory naming, description constraints, line budget, required resources, DESIGN template structure, eval coverage, and upstream resolution.
+
+To validate package output, first run the corresponding builder from the
+repository root, then run the marketplace validator shown in the relevant
+package guide: [`packaging/codex/README.md`](packaging/codex/README.md) or
+[`packaging/claude/README.md`](packaging/claude/README.md).
 
 Run the official Agent Skills reference validator:
 

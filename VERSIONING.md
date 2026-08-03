@@ -27,7 +27,10 @@ Given version `MAJOR.MINOR.PATCH`:
 
 ## Upstream `frontend-design` version handling
 
-Premium loads the upstream at runtime and does not vendor or pin it. To maintain reproducible behavior, premium records a tested upstream content digest and revision label.
+Direct source installations load the upstream at runtime and record a tested
+upstream content digest and revision label. The Codex and Claude Code plugin
+packages bundle that same tested snapshot during their deterministic builds, so
+marketplace consumers do not need a separate upstream installation.
 
 | Event | Required action | Version bump |
 |-------|---------------|-------------|
@@ -46,9 +49,10 @@ When upstream changes:
 3. Run `python scripts/validate_skill.py` for structural validation.
 4. Run the eval suite and compare outputs against the previous tested upstream.
 5. Review changed outputs: business-context grounding, register classification, visual direction, DESIGN.md content.
-6. If changes are acceptable, update `upstream-tested.digest` in SKILL.md frontmatter.
+6. If changes are acceptable, update `upstream-tested.digest` in `SKILL.md`, `integrations/pilot.json`, and the vendored upstream metadata.
 7. Bump premium version per the table above.
-8. Update CHANGELOG with the upstream revision and summary of behavioral changes.
+8. Build both marketplace packages and confirm their vendored digest matches.
+9. Update CHANGELOG with the upstream revision and summary of behavioral changes.
 
 ## What versioning does NOT cover
 
@@ -67,6 +71,8 @@ Before tagging a release:
 6. `CHANGELOG.md` updated
 7. `SKILL.md` version bumped
 8. `evals/golden-test-report.md` updated if behaviour changed
+9. `python scripts/build_codex_plugin.py` and the Codex package validator — PASS
+10. `python scripts/build_claude_plugin.py` and `claude plugin validate --strict` — PASS
 
 ### After tagging
 
