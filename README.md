@@ -107,7 +107,7 @@ Normal use should not require manual stacking because the premium skill explicit
 **Author flow** (one person per team):
 
 ```bash
-git clone https://github.com/your-org/frontend-design-premium
+git clone https://github.com/TryHand-Co-Ltd/frontend-design-premium
 cd frontend-design-premium
 python scripts/install.py --target all
 ```
@@ -128,7 +128,7 @@ python scripts/install.py --upgrade
 **Alternative — Git submodule:**
 
 ```bash
-git submodule add https://github.com/your-org/frontend-design-premium .skills/frontend-design-premium
+git submodule add https://github.com/TryHand-Co-Ltd/frontend-design-premium .skills/frontend-design-premium
 git submodule update --remote .skills/frontend-design-premium
 python .skills/frontend-design-premium/scripts/install.py --upgrade
 ```
