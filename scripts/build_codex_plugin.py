@@ -21,6 +21,7 @@ UPSTREAM_OUT = PLUGIN_OUT / "skills" / "frontend-design"
 EXPECTED_UPSTREAM_DIGEST = (
     "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
 )
+TEXT_SUFFIXES = {".json", ".md", ".py", ".txt", ".yaml", ".yml"}
 
 
 def normalized_sha256(path: Path) -> str:
@@ -30,6 +31,18 @@ def normalized_sha256(path: Path) -> str:
 
 def copy_tree(source: Path, destination: Path) -> None:
     shutil.copytree(source, destination, dirs_exist_ok=True)
+    for path in destination.rglob("*"):
+        if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES:
+            path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
+
+
+def copy_file(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    data = source.read_bytes()
+    if source.suffix.lower() in TEXT_SUFFIXES:
+        data = data.replace(b"\r\n", b"\n")
+    destination.write_bytes(data)
+    shutil.copymode(source, destination)
 
 
 def write_json(path: Path, value: object) -> None:
@@ -65,18 +78,18 @@ def main() -> int:
     copy_tree(TEMPLATE, PLUGIN_OUT)
 
     PREMIUM_OUT.mkdir(parents=True)
-    shutil.copy2(ROOT / "SKILL.md", PREMIUM_OUT / "SKILL.md")
+    copy_file(ROOT / "SKILL.md", PREMIUM_OUT / "SKILL.md")
     copy_tree(ROOT / "agents", PREMIUM_OUT / "agents")
     copy_tree(ROOT / "references", PREMIUM_OUT / "references")
     copy_tree(ROOT / "assets", PREMIUM_OUT / "assets")
     (PREMIUM_OUT / "scripts").mkdir()
-    shutil.copy2(
+    copy_file(
         ROOT / "scripts" / "resolve_frontend_design.py",
         PREMIUM_OUT / "scripts" / "resolve_frontend_design.py",
     )
 
     copy_tree(VENDORED_UPSTREAM, UPSTREAM_OUT)
-    shutil.copy2(ROOT / "LICENSE", PLUGIN_OUT / "LICENSE")
+    copy_file(ROOT / "LICENSE", PLUGIN_OUT / "LICENSE")
 
     marketplace = {
         "name": "tryhand-preview",
@@ -101,7 +114,7 @@ def main() -> int:
     archive_path = ROOT / "dist" / f"frontend-design-premium-codex-{version}.zip"
     build_zip(PLUGIN_OUT, archive_path)
     archive_digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
-    checksum_path = ROOT / "dist" / "SHA256SUMS"
+    checksum_path = ROOT / "dist" / "SHA256SUMS.codex"
     checksum_path.write_text(
         f"{archive_digest}  {archive_path.name}\n",
         encoding="utf-8",

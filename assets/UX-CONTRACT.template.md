@@ -8,7 +8,9 @@
 
 - Audience:
 - Primary jobs:
+- Target market(s):
 - Active locales:
+- Language/content register and native-review policy:
 - Timezone/calendar policy:
 - Accessibility target: WCAG 2.2 AA
 
@@ -23,6 +25,7 @@ Record the authoritative sources that ground the UI behavior in this contract. D
 | Deletion / retention | _path_ | Privacy policy / ADR | |
 | Billing / payment | _path_ | Billing spec | |
 | Legal / regulatory copy | _path_ | Product brief / Legal review | |
+| Market / content conventions | _research path / style guide_ | User research / Content guide | |
 
 ## Visual contract
 
@@ -133,5 +136,7 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 - Required static commands:
 - Browser/device/locale/theme matrix:
 - Accessibility checks:
+- Native-language/domain review and target-user evidence:
+- Japan readiness matrix (IME, mixed scripts, normalization, long names/addresses, visual regression), when applicable:
 - Component-state/visual regression coverage:
 - Canonical sibling flow used for comparison:

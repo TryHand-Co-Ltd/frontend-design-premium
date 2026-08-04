@@ -51,6 +51,8 @@ components:
 ### Product context and register
 
 - **Audience and primary job:** [Who uses it and what they need to accomplish.]
+- **Target market(s) and evidence:** [Markets served; cite target-user, product, domain, or comparable-product evidence. Do not infer market from locale.]
+- **Locale(s) and language policy:** [UI/content locales, bilingual behavior, fallback policy, and native-review owner.]
 - **Usage scene:** [Device, environment, frequency, urgency, and information density.]
 - **Register:** [Brand, product, or hybrid; identify routes if hybrid.]
 - **Memorable signature:** [The one distinctive move that may carry expression.]
@@ -64,7 +66,7 @@ components:
 
 ## Typography
 
-[Explain families, locale-capable fallbacks, roles, weights, line heights, measure, numeric/technical text, Japanese script behavior, and casing rules. Reference exact tokens.]
+[Explain families, locale-capable fallbacks, roles, weights, line heights, measure, numeric/technical text, mixed-script and Japanese line-breaking behavior when applicable, and casing rules. For Japanese-facing work, distinguish prose, controls, dense data, and numeric styles; record fallback, kinsoku, ruby, and italic policy. Reference exact tokens.]
 
 ## Layout
 

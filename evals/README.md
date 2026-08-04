@@ -4,7 +4,7 @@ This directory contains structured eval cases for verifying that the skill produ
 
 ## Contents
 
-- **`evals.json`** — 24 eval cases with prompts, expected outputs, and file lists (12 with fixtures).
+- **`evals.json`** — 38 eval cases with prompts, expected outputs, file lists, and a machine-validated Japan-readiness claim matrix.
 - **`fixtures/`** — Broken/input fixtures wired from `evals.json` `files` entries.
 - **`results/`** — Recorded agent output for each eval (created by the runner).
 
@@ -94,13 +94,18 @@ To add a case:
      "id": 13,
      "prompt": "Your eval prompt here",
      "expected_output": "What the skill should produce",
-     "files": ["src/app/example/page.tsx"]
+      "files": ["src/app/example/page.tsx"],
+      "claims": ["optional_machine_validated_claim"],
+      "evidence_required": ["browser-workflow"],
+      "negative_oracle": "What broken or trivial output must fail this eval."
    }
    ```
 
 2. The `files` field lists the files that the eval is expected to create or modify. Use an empty array for pure design/conversation evals.
 
-3. Run through the full workflow above to record baseline and skill-enabled results.
+3. For Japan-readiness cases, update `japan_readiness_claims` and include explicit evidence types plus a negative oracle. Every fixture path must exist.
+
+4. Run through the full workflow above to record baseline and skill-enabled results.
 
 ## Eval categories
 
@@ -118,9 +123,13 @@ To add a case:
 | 20 | Non-UI decline | Backend Python task — skill must not activate UI contracts |
 | 21–22 | Destructive + UX contract | AlertDialog danger + UX-CONTRACT draft |
 | 23–24 | On-demand packs | Permission UI (hide/disable/403) + overlay layer contract |
+| 25–26 | Business authority | ADR/API evidence, conflict handling, high-risk escalation |
+| 27–38 | Japan readiness | Market/locale separation, IME beyond search, content/typography, representative audiences, regulated escalation, anti-stereotype, marketing routing |
 
 ## Notes
 
 - The runner is a **structured capture tool**, not an automated agent harness. It does not run headless browsers or send prompts to an LLM. It helps you record results consistently.
+- `validate_skill.py` and `verify_cases.py` prove structure, claim coverage, fixture wiring, and negative-oracle presence only. They do not prove natural Japanese, browser behavior, target-user fit, or legal applicability.
+- Japan-ready acceptance must attach the `evidence_required` types declared by the case. Native Japanese/domain review cannot be replaced by keyword counts or machine translation.
 - Eval prompts in Vietnamese (e.g. eval #1) are deliberate — the skill must handle non-English briefs and produce English-level contract decisions.
 - Expected outputs are intentionally dense. No single implementation will match every clause; treat `expected_output` as a coverage guide, not a checklist.

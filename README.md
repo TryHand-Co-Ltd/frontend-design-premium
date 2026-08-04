@@ -51,7 +51,7 @@ python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
   dist/codex-marketplace/plugins/frontend-design-premium
 ```
 
-The generated review archive is written to `dist/frontend-design-premium-codex-1.2.0.zip`.
+The generated review archive is written to `dist/frontend-design-premium-codex-1.3.0.zip`.
 It bundles the tested upstream `frontend-design` snapshot and verifies its recorded digest during every build. See [`packaging/codex/README.md`](packaging/codex/README.md) for local marketplace testing.
 
 #### Claude Code
@@ -122,7 +122,7 @@ Restart the harness if it does not support live skill discovery.
 
 | Command | What it does |
 |---------|-------------|
-| `python scripts/install.py --version` | Print skill version (`v1.2.0`) |
+| `python scripts/install.py --version` | Print skill version (`v1.3.0`) |
 | `python scripts/install.py --check` | Compare source version against each installed target |
 | `python scripts/install.py --list-targets` | Show install status per harness (link type + version) |
 | `python scripts/install.py --target agents` | Install to `.agents/skills/` (default) |
@@ -286,6 +286,8 @@ frontend-design-premium/
 │   │   ├── broken-admin-table.tsx
 │   │   ├── destructive-delete-row.tsx
 │   │   ├── jp-onboarding-wizard.tsx
+│   │   ├── jp-ime-autosave.tsx
+│   │   ├── japan-checkout.tsx
 │   │   ├── marketing-hero.tsx
 │   │   ├── overlay-stack-chaos.tsx
 │   │   ├── parse-json-logs.py
@@ -305,7 +307,11 @@ frontend-design-premium/
 │   ├── electron-dual-surface.md      # Token/behavior sync for Electron + web
 │   ├── file-upload.md                # Drag-and-drop, validation, progress, abort
 │   ├── interaction-contract.md
+│   ├── japan-market-context.md       # Market/locale/content gate + evidence precedence
+│   ├── japan-regulated-flows.md      # On-demand authority/escalation for regulated Japan flows
+│   ├── japanese-content-design.md    # Natural copy, register, actions, native review
 │   ├── japanese-localization.md
+│   ├── japanese-visual-layout.md     # Typography, kinsoku, density, anti-stereotype
 │   ├── layer-contract.md             # Z-index scale, overlay stacking, focus trap
 │   ├── llm-streaming.md              # Streaming chat, SSE, abort, message display
 │   ├── navigation-layout.md
@@ -335,7 +341,7 @@ Run the repository validator:
 python scripts/validate_skill.py
 ```
 
-It checks frontmatter, directory naming, description constraints, line budget, required resources, DESIGN template structure, eval coverage, and upstream resolution.
+It checks frontmatter, directory naming, description constraints, line budget, required resources, DESIGN template structure, every eval fixture path, Japan-readiness claim/negative-oracle/evidence wiring, and upstream resolution.
 
 To validate package output, first run the corresponding builder from the
 repository root, then run the marketplace validator shown in the relevant

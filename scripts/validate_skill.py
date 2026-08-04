@@ -14,6 +14,24 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
 DESIGN_TEMPLATE = ROOT / "assets" / "DESIGN.template.md"
 PILOT_MANIFEST = ROOT / "integrations" / "pilot.json"
+CLAUDE_PACKAGE_SKILL = (
+    ROOT
+    / "packaging"
+    / "claude"
+    / "plugins"
+    / "frontend-design-premium"
+    / "skills"
+    / "frontend-design-premium"
+)
+PACKAGE_TEXT_SUFFIXES = {".json", ".md", ".py", ".txt", ".yaml", ".yml"}
+
+
+def package_bytes(path: Path) -> bytes:
+    """Return bytes in the canonical form used by deterministic package builders."""
+    data = path.read_bytes()
+    if path.suffix.lower() in PACKAGE_TEXT_SUFFIXES:
+        return data.replace(b"\r\n", b"\n")
+    return data
 
 
 def where_npx() -> str | None:
@@ -113,7 +131,11 @@ def main() -> int:
         "references/data-entry-patterns.md",
         "references/async-resilience.md",
         "references/consistency-system.md",
+        "references/japan-market-context.md",
+        "references/japanese-content-design.md",
+        "references/japanese-visual-layout.md",
         "references/japanese-localization.md",
+        "references/japan-regulated-flows.md",
         "references/decision-matrix.md",
         "references/anti-patterns.md",
         "references/permission-ui.md",
@@ -156,6 +178,75 @@ def main() -> int:
         except (json.JSONDecodeError, OSError) as error:
             errors.append(f"invalid integrations/pilot.json: {error}")
 
+    version_manifests = [
+        ROOT
+        / "packaging"
+        / "codex"
+        / "plugins"
+        / "frontend-design-premium"
+        / ".codex-plugin"
+        / "plugin.json",
+        ROOT
+        / "packaging"
+        / "claude"
+        / "plugins"
+        / "frontend-design-premium"
+        / ".claude-plugin"
+        / "plugin.json",
+    ]
+    for manifest_path in version_manifests:
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if manifest.get("version") != skill_version:
+                errors.append(
+                    f"{manifest_path.relative_to(ROOT)} version does not match SKILL.md"
+                )
+        except (json.JSONDecodeError, OSError) as error:
+            errors.append(f"invalid {manifest_path.relative_to(ROOT)}: {error}")
+
+    marketplace_path = ROOT / ".claude-plugin" / "marketplace.json"
+    try:
+        marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+        plugins = marketplace.get("plugins", [])
+        plugin = next(
+            (item for item in plugins if item.get("name") == name),
+            None,
+        )
+        if plugin is None:
+            errors.append(".claude-plugin/marketplace.json is missing the skill plugin")
+        elif plugin.get("version") != skill_version:
+            errors.append(".claude-plugin/marketplace.json version does not match SKILL.md")
+    except (json.JSONDecodeError, OSError) as error:
+        errors.append(f"invalid .claude-plugin/marketplace.json: {error}")
+
+    package_pairs = [
+        (SKILL, CLAUDE_PACKAGE_SKILL / "SKILL.md"),
+        (
+            ROOT / "scripts" / "resolve_frontend_design.py",
+            CLAUDE_PACKAGE_SKILL / "scripts" / "resolve_frontend_design.py",
+        ),
+    ]
+    for source_dir_name in ("references", "assets"):
+        source_dir = ROOT / source_dir_name
+        for source_path in source_dir.rglob("*"):
+            if source_path.is_file():
+                package_pairs.append(
+                    (
+                        source_path,
+                        CLAUDE_PACKAGE_SKILL
+                        / source_dir_name
+                        / source_path.relative_to(source_dir),
+                    )
+                )
+    for source_path, packaged_path in package_pairs:
+        relative = packaged_path.relative_to(ROOT)
+        if not packaged_path.is_file():
+            errors.append(f"Claude package is missing generated source: {relative}")
+        elif packaged_path.read_bytes() != package_bytes(source_path):
+            errors.append(
+                f"Claude package source drift: {relative}; run scripts/build_claude_plugin.py"
+            )
+
     eval_path = ROOT / "evals" / "evals.json"
     if eval_path.is_file():
         try:
@@ -168,6 +259,67 @@ def main() -> int:
             eval_ids = [case.get("id") for case in eval_cases if isinstance(case, dict)]
             if len(eval_ids) != len(set(eval_ids)):
                 errors.append("eval IDs must be unique")
+
+            cases_by_id = {
+                case.get("id"): case
+                for case in eval_cases
+                if isinstance(case, dict) and isinstance(case.get("id"), int)
+            }
+            for case_id, case in cases_by_id.items():
+                files = case.get("files", [])
+                if not isinstance(files, list):
+                    errors.append(f"eval #{case_id} files must be a list")
+                    continue
+                for fixture in files:
+                    if not isinstance(fixture, str) or not fixture:
+                        errors.append(f"eval #{case_id} has an invalid fixture path")
+                    elif not (eval_path.parent / fixture).is_file():
+                        errors.append(f"eval #{case_id} missing fixture: evals/{fixture}")
+
+            required_japan_claims = {
+                "market_context",
+                "native_copy_typography",
+                "ime_non_search",
+                "regulated_escalation",
+                "anti_stereotype",
+                "runtime_verification",
+            }
+            claim_matrix = evals.get("japan_readiness_claims", {})
+            if not isinstance(claim_matrix, dict):
+                errors.append("japan_readiness_claims must be an object")
+                claim_matrix = {}
+            missing_claims = required_japan_claims - set(claim_matrix)
+            if missing_claims:
+                errors.append(
+                    "Japan readiness claim matrix missing: "
+                    + ", ".join(sorted(missing_claims))
+                )
+            for claim in sorted(required_japan_claims):
+                case_ids = claim_matrix.get(claim, [])
+                if not isinstance(case_ids, list) or not case_ids:
+                    errors.append(f"Japan readiness claim {claim!r} has no eval cases")
+                    continue
+                for case_id in case_ids:
+                    case = cases_by_id.get(case_id)
+                    if case is None:
+                        errors.append(
+                            f"Japan readiness claim {claim!r} references missing eval #{case_id}"
+                        )
+                        continue
+                    case_claims = case.get("claims", [])
+                    if claim not in case_claims:
+                        errors.append(
+                            f"eval #{case_id} must declare claim {claim!r}"
+                        )
+                    if not case.get("negative_oracle"):
+                        errors.append(
+                            f"eval #{case_id} needs a negative_oracle for {claim!r}"
+                        )
+                    evidence = case.get("evidence_required", [])
+                    if not isinstance(evidence, list) or not evidence:
+                        errors.append(
+                            f"eval #{case_id} needs evidence_required for {claim!r}"
+                        )
         except (json.JSONDecodeError, OSError) as error:
             errors.append(f"invalid evals/evals.json: {error}")
 
