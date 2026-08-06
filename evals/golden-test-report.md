@@ -1,4 +1,13 @@
-# Golden Test Report — frontend-design-premium v1.0.0
+# Golden Test Report — frontend-design-premium
+
+## v1.3.0 Japan-readiness candidate — 2026-08-04
+
+- Structural validation covers 38 evals, all fixture paths, six Japan-readiness claims, explicit negative oracles, and required evidence types.
+- `verify_cases.py` is deletion-sensitive for the Japan marketing route and anti-stereotype claim, and explicitly reports that structural PASS is not behavioral proof.
+- No v1.3.0 agent outputs, fresh-session solo baseline, Japanese browser/device run, native Japanese/domain review, representative target-user test, or legal applicability review has been recorded yet.
+- Therefore this report does **not** certify the skill as Japan-ready. Those evidence types remain acceptance gates for the relevant eval cases.
+
+## Historical v1.0.0 baseline
 
 ## 1. DESIGN.md Creation (Skill Step 2)
 

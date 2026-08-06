@@ -1,12 +1,36 @@
 # Changelog
 
-## Unreleased
+All notable changes to this skill are documented here.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).
+
+## 1.3.0 - 2026-08-04
+
+### Added
+
+- Independent Japan-market, Japanese-locale, and Japanese content/visual routing, including Japan-targeted marketing and English-language products operating in Japan.
+- Direct references for Japan market context, Japanese content design, Japanese visual/layout behavior, and on-demand regulated flows.
+- Japan readiness fields in `DESIGN.template.md` and `UX-CONTRACT.template.md`, plus an expanded device/input/copy/typography/data/legal verification matrix.
+- Eval cases #27–#38, machine-validated Japan-readiness claims, explicit evidence requirements, negative oracles, and two deliberately broken fixtures for IME/autosave and checkout/legal-copy review.
+- Primary Japanese sources from the Digital Agency, W3C JLREQ, Personal Information Protection Commission, and Consumer Affairs Agency.
 
 ### Changed
 
 - Refreshed installation, packaging, validation, and upstream-compatibility
   documentation to distinguish self-contained marketplace plugins from direct
   source installations.
+- Marketing register no longer exempts Japan-facing content, typography, locale, and trust rules; application-only contracts remain scoped out.
+- Japanese localization now covers IME beyond search, representative name/address/phone cases, fiscal year/holiday policy, frontend/backend normalization, foreign-resident paths, and editable address suggestions.
+- `validate_skill.py` now validates every eval fixture path and Japan claim/negative-oracle/evidence wiring.
+- `verify_cases.py` now performs failure-sensitive structural checks and explicitly separates repository wiring from browser, native-copy, target-user, and legal evidence.
+- Version bumped from 1.2.0 to 1.3.0.
+
+### Fixed
+
+- Claude and Codex package builders now normalize text artifacts to LF while preserving binary bytes, preventing OS-dependent package diffs and archive contents.
+- The Codex builder now writes the documented `dist/SHA256SUMS.codex` file instead of the ambiguous `dist/SHA256SUMS` name.
+- Empty incompatible-upstream metadata is omitted instead of using a disallowed flow-style `[]`, so the official Agent Skills validator accepts the frontmatter while the resolver still defaults to an empty list.
+- Strict validation now detects version drift across SKILL, Pilot, marketplace/plugin manifests, and stale generated Claude package sources.
 
 ## 1.2.0 - 2026-08-03
 
@@ -31,10 +55,6 @@
   development-only script containing hard-coded Windows workspace paths.
 - The upstream resolver now trusts a verified sibling skill bundled inside a
   Codex plugin while preserving its supported-root checks.
-
-All notable changes to this skill are documented here.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).
 
 ## [1.1.0] — 2026-07-30
 

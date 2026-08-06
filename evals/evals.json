@@ -1,5 +1,13 @@
 {
   "skill_name": "frontend-design-premium",
+  "japan_readiness_claims": {
+    "market_context": [27, 30, 35],
+    "native_copy_typography": [29, 31, 33, 38],
+    "ime_non_search": [28, 32],
+    "regulated_escalation": [27, 36, 37],
+    "anti_stereotype": [34],
+    "runtime_verification": [28, 29, 31, 32]
+  },
   "evals": [
     {
       "id": 1,
@@ -180,6 +188,114 @@
       "prompt": "Design a billing settings page for an existing SaaS. The product has ADR-007 describing subscription lifecycle (trial→active→expired→cancelled). The API contract exposes an idempotent cancellation endpoint. There is no billing-spec document. Handle the cancel-subscription workflow.",
       "expected_output": "Discovers ADR-007 and the API contract before designing. Recognises billing/payment as a high-risk category that must not use generic defaults. Reads ADR lifecycle transitions and API idempotency guarantees. Resolves that cancellation is idempotent and server-confirmed (pessimistic mutation). Does not implement optimistic cancellation. Records the authoritative source references in UX-CONTRACT.md (ADR-007, API contract path) rather than duplicating the subscription rules. Treats missing billing-spec as an escalated gap.",
       "files": []
+    },
+    {
+      "id": 27,
+      "prompt": "Build a Japan-market consumer ecommerce checkout in Japanese. Product policy defines inventory reservation and payment idempotency, but there is no maintained source for tax wording, recurring-payment disclosure, returns, or the final-order confirmation requirements.",
+      "expected_output": "Separates Japan market from ja-JP locale, loads the market/content/visual/localization packs and the regulated-flow pack, uses the known inventory/idempotency contracts, and explicitly escalates every missing tax/legal/returns/subscription authority instead of inventing copy. The design preserves review, edit, and final commitment as distinct states and names the exact evidence still required.",
+      "files": ["fixtures/japan-checkout.tsx"],
+      "claims": ["market_context", "regulated_escalation"],
+      "evidence_required": ["source-trace", "browser-workflow", "native-domain-review"],
+      "negative_oracle": "Fails if it treats ja-JP formatting as legal compliance, guesses tax/returns/subscription language, or makes the review CTA place the order."
+    },
+    {
+      "id": 28,
+      "prompt": "Fix this Japanese profile editor. Autosave, Enter-to-submit, Ctrl+K, character counting, and company autocomplete all react during IME composition, and stale suggestions can replace a newer value.",
+      "expected_output": "Implements a shared composition-aware input contract across autosave, submit, shortcuts, counters, autocomplete, and remote requests; dispatches the final value once after composition; cancels or ignores stale responses; and adds event-level tests that prove zero side effects while composing and the correct final side effect after compositionend.",
+      "files": ["fixtures/jp-ime-autosave.tsx"],
+      "claims": ["ime_non_search", "runtime_verification"],
+      "evidence_required": ["automated-interaction-test", "browser-workflow"],
+      "negative_oracle": "Fails if Japanese labels or comments say IME-safe while onChange, Enter, autosave, shortcuts, counters, or stale responses still consume incomplete composition."
+    },
+    {
+      "id": 29,
+      "prompt": "Create a Japanese public-service application flow for older adults. It must work at 200% zoom, use clear Japanese guidance, and support a high-accessibility review process.",
+      "expected_output": "Grounds density and guidance in older-adult/public-service evidence, uses readable Japanese typography and explicit correction guidance, verifies Japanese screen-reader output and WCAG 2.2 AA plus applicable JIS X 8341-3-oriented checks, and records native-domain copy review and representative user testing as release evidence rather than claiming readiness from source inspection.",
+      "files": [],
+      "claims": ["native_copy_typography", "runtime_verification"],
+      "evidence_required": ["native-domain-review", "target-user-test", "browser-screenshot", "accessibility-test"],
+      "negative_oracle": "Fails if it uses small dense text because Japanese sites are assumed dense, or claims accessibility from WCAG prose without Japanese assistive-technology evidence."
+    },
+    {
+      "id": 30,
+      "prompt": "Design an account-opening service used in Japan by Japanese users and foreign residents. The primary UI is Japanese with English assistance; legal names may use Kanji, kana, Latin script, middle names, or one name.",
+      "expected_output": "Records audience and bilingual policy separately from locale, provides flexible legal/display/readings data paths without forcing a two-field Kanji model, supports international phone/address needs alongside Japanese order, and routes unresolved identity requirements to the authoritative domain owner. Japanese and English assistance remain semantically aligned and accessible.",
+      "files": [],
+      "claims": ["market_context"],
+      "evidence_required": ["source-trace", "representative-data-test", "native-domain-review"],
+      "negative_oracle": "Fails if every person is forced into surname/given-name Kanji plus Katakana-only furigana, or if English support bypasses Japan-market identity rules."
+    },
+    {
+      "id": 31,
+      "prompt": "Audit a Japanese B2B operations dashboard with long company names, mixed Kanji/Latin identifiers, dense tables, and comparison-heavy daily work. Improve it without making it consumer-spacious or stereotypically cluttered.",
+      "expected_output": "Derives density from comparison frequency and expert workflow, defines separate prose/control/dense-data typography, checks Japanese-capable fallback, mixed-script metrics, full-value access, focus and targets, 200% zoom, and ja-JP visual regression. It preserves useful density while rejecting both generic airy SaaS minimalism and Japan-equals-clutter assumptions.",
+      "files": [],
+      "claims": ["native_copy_typography", "runtime_verification"],
+      "evidence_required": ["browser-screenshot", "visual-regression", "target-user-evidence"],
+      "negative_oracle": "Fails if density is chosen from cultural shorthand, important values become hover-only, or Japanese fallback and zoom are not rendered."
+    },
+    {
+      "id": 32,
+      "prompt": "Implement a Japan registration form covering personal and corporate names, furigana, postal-code address suggestions, domestic/international phones, full-/half-width input, fiscal year, and Japanese IME. Frontend and backend normalization rules are not yet aligned.",
+      "expected_output": "Uses an explicit data contract, keeps postal suggestions editable, handles corporate prefix/suffix and legitimate foreign-name/readings cases, distinguishes display/source values from normalization keys, exercises IME outside search, and escalates the frontend/backend normalization mismatch instead of silently normalizing only the client.",
+      "files": ["fixtures/jp-ime-autosave.tsx"],
+      "claims": ["ime_non_search", "runtime_verification"],
+      "evidence_required": ["representative-data-test", "automated-interaction-test", "source-trace"],
+      "negative_oracle": "Fails if it uses one rigid phone/furigana regex, locks auto-filled addresses, rewrites legal names, or hides a client/backend normalization mismatch."
+    },
+    {
+      "id": 33,
+      "prompt": "Review Japanese validation, empty, confirmation, toast, and button copy across a checkout. The interface has translated OK buttons, mixed お客様/ユーザー terminology, cold schema errors, and English aria-labels.",
+      "expected_output": "Chooses and documents a consistent Japanese register and glossary, replaces generic actions with outcome-specific verbs, differentiates review from commitment, provides field-specific recovery, localizes accessible names, and requires native Japanese domain review for critical copy. It does not treat Japanese-character presence or machine translation as proof of naturalness.",
+      "files": ["fixtures/japan-checkout.tsx"],
+      "claims": ["native_copy_typography"],
+      "evidence_required": ["native-domain-review", "rendered-copy-review", "accessibility-test"],
+      "negative_oracle": "Fails if visible headings are Japanese but actions, errors, aria-labels, emails, or library defaults leak English or use generic OK."
+    },
+    {
+      "id": 34,
+      "prompt": "Make this global SaaS landing page feel Japanese for a Tokyo launch. Add sakura, a red sun, brush lettering, anime accents, Zen whitespace, and denser text so Japanese visitors trust it.",
+      "expected_output": "Rejects the ungrounded stereotype brief, asks for or derives evidence from the actual audience, sector, brand, and comparable Japanese products, and proposes a Japan-market content/typography/trust direction without forcing application contracts. Cultural motifs are used only if approved brand or campaign evidence supports them.",
+      "files": ["fixtures/marketing-hero.tsx"],
+      "claims": ["anti_stereotype"],
+      "evidence_required": ["market-evidence", "anti-reference-rationale"],
+      "negative_oracle": "Fails if it implements any requested cultural shorthand merely to appear Japanese."
+    },
+    {
+      "id": 35,
+      "prompt": "Build an English-language merchant dashboard that operates only in Japan. It handles Japanese corporate names, addresses, JPY settlement, consumption-tax fields, and domestic support workflows.",
+      "expected_output": "Routes Japan-market and data contracts despite the non-ja UI, does not force Japanese copy, applies Japanese corporate/address/currency behavior where authoritative, and escalates tax/invoice/support rules that lack maintained domain sources. Market and locale remain separate in DESIGN.md and UX-CONTRACT.md.",
+      "files": [],
+      "claims": ["market_context"],
+      "evidence_required": ["source-trace", "representative-data-test"],
+      "negative_oracle": "Fails if locale=en causes Japan-market data/legal rules to be skipped or if English UI is silently translated."
+    },
+    {
+      "id": 36,
+      "prompt": "Add an APPI consent screen and cross-border data-transfer disclosure for a Japan service. There is no approved purpose-of-use copy, retention policy, transfer inventory, or legal owner sign-off.",
+      "expected_output": "Loads the regulated-flow authority gate, identifies every missing source and owner, and stops the affected legal-copy decision. It may design a clearly marked structural placeholder but must not invent consent, retention, transfer, or deletion policy or copy a GDPR cookie banner.",
+      "files": [],
+      "claims": ["regulated_escalation"],
+      "evidence_required": ["authority-gap-report", "legal-review"],
+      "negative_oracle": "Fails if it writes definitive APPI copy, certifies compliance, or imports GDPR behavior without Japan-specific authority."
+    },
+    {
+      "id": 37,
+      "prompt": "Design a Japanese subscription purchase flow. The API contract defines payment idempotency, but renewal timing, cancellation policy, tax labels, returns, seller information, and required final-confirmation disclosures are unresolved.",
+      "expected_output": "Uses the API evidence only for payment behavior, escalates unresolved commerce and legal policy, preserves review/edit/final-commit boundaries, and defines failure, duplicate-submit, timeout, uncertain-completion, receipt, and support states without inventing subscription terms.",
+      "files": ["fixtures/japan-checkout.tsx"],
+      "claims": ["regulated_escalation"],
+      "evidence_required": ["source-trace", "browser-workflow", "legal-review"],
+      "negative_oracle": "Fails if one CTA both reviews and commits, or if missing policy is replaced by generic ecommerce defaults."
+    },
+    {
+      "id": 38,
+      "prompt": "Create a Japanese-language marketing page for a new B2B service. It has no forms or app workflows, but it needs credible Japanese copy, typography, line breaking, trust cues, and a native review plan.",
+      "expected_output": "Keeps upstream ownership of creative direction and avoids UX-CONTRACT/CRUD machinery, while still loading Japan market, Japanese content, and Japanese visual-layout guidance. It sets evidence-based register and trust cues, Japanese-capable type, kinsoku and mixed-script checks, long-copy responsive verification, and native review for high-traffic acquisition copy.",
+      "files": ["fixtures/marketing-hero.tsx"],
+      "claims": ["native_copy_typography"],
+      "evidence_required": ["native-review", "browser-screenshot", "market-evidence"],
+      "negative_oracle": "Fails if the marketing register skips Japanese content/typography rules or if it is forced through application-only contracts."
     }
   ]
 }

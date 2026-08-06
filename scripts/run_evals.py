@@ -64,6 +64,10 @@ def print_checklist(evals):
         print(f"  [{e['id']:02d}] {prompt_short}")
         print(f"       Expected: {e['expected_output'][:80]}...")
         print(f"       Files:    {', '.join(e['files']) if e['files'] else '(free text)'}")
+        if e.get("claims"):
+            print(f"       Claims:   {', '.join(e['claims'])}")
+            print(f"       Evidence: {', '.join(e.get('evidence_required', []))}")
+            print(f"       Must fail: {e.get('negative_oracle', '(missing)')}")
         print()
     print("Instructions:")
     print("  1. Create a test project at e.g. /tmp/eval-project")
@@ -169,19 +173,22 @@ def print_report(evals):
     print()
 
 
-def check_validation():
+def check_validation() -> bool:
     """Quick pre-flight: validate skill structure."""
     print("Checking skill structure...")
+    valid = True
     try:
         result = subprocess.run(
             [sys.executable, str(SKILL_DIR / "scripts" / "validate_skill.py")],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True, text=True, timeout=180,
         )
         if result.returncode == 0:
             print("  Validation: OK")
         else:
-            print(f"  Validation warnings:\n{result.stdout}{result.stderr}")
+            valid = False
+            print(f"  Validation failed:\n{result.stdout}{result.stderr}")
     except Exception as exc:
+        valid = False
         print(f"  Validation error: {exc}")
 
     # Check evals.json
@@ -190,10 +197,11 @@ def check_validation():
         print(f"  Evals loaded: {len(evals)} cases")
         print(f"  Skill: {skill_name}")
     except (json.JSONDecodeError, KeyError) as exc:
+        valid = False
         print(f"  Evals JSON error: {exc}")
-        sys.exit(1)
 
     print()
+    return valid
 
 
 def main():
@@ -218,7 +226,8 @@ def main():
         list_evals(evals)
 
     elif cmd == "--run":
-        check_validation()
+        if not check_validation():
+            sys.exit(1)
         if len(sys.argv) < 3:
             print("Specify eval ID or 'all'")
             sys.exit(1)
@@ -241,7 +250,8 @@ def main():
         print_checklist(evals)
 
     elif cmd == "--validate":
-        check_validation()
+        if not check_validation():
+            sys.exit(1)
 
     else:
         print(f"Unknown command: {cmd}")

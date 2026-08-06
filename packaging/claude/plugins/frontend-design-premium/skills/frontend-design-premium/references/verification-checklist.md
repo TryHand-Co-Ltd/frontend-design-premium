@@ -120,6 +120,26 @@ Use this before finishing every implementation or review. Mark non-applicable it
 - [ ] Long localized text does not clip or move critical controls.
 - [ ] Typography fallbacks and line heights render every supported script without breaking density.
 
+## Japan readiness (when market, audience, locale, or data contract triggers it)
+
+- [ ] Japan market, Japanese locale, and Japanese content/visual design were classified independently; an English Japan-market UI and a Japanese non-Japan UI route correctly.
+- [ ] Target audience, domain, device context, information density, language/register, trust needs, and supporting evidence are explicit.
+- [ ] Japanese-facing marketing work received Japanese content and typography review without being forced through application-only CRUD contracts.
+- [ ] Upstream English writing/aesthetic defaults did not override natural Japanese, domain trust, established product conventions, accessibility, or authoritative sources.
+- [ ] Japanese copy uses a consistent register, terminology/glossary, action vocabulary, punctuation, and error-recovery style; no owned UI, accessible name, date-picker, email, or component-library English leaks remain.
+- [ ] Critical copy was reviewed by a native Japanese reviewer with relevant domain context; reviewer/evidence is recorded or the missing review is reported as release risk.
+- [ ] Japanese-capable fonts, approximately 16px body baseline, script-appropriate line height, mixed-script fallback, no default italic, kinsoku behavior, semantic ruby, and representative full-width line measure were inspected.
+- [ ] Density follows task and audience evidence; the result does not use sakura/red-sun/washi/brush/anime/“Zen”/decorative-kana shorthand without product evidence.
+- [ ] IME composition was exercised in submit, Enter/shortcuts, autosave, validation, counters, combobox/autocomplete, command palette, and search where applicable; no premature action or stale response occurred.
+- [ ] Full-/half-width, kana/Kanji/Latin, diacritics, whitespace, and search normalization match the backend/domain contract; client-only normalization does not change identity or matching semantics.
+- [ ] Personal and corporate names, furigana, foreign-resident/Latin-name paths, domestic/international phones, all 47 prefectures, editable address auto-fill, building names, and long identifiers were tested as applicable.
+- [ ] Date-only/JST/source-timezone, Gregorian/era, calendar/fiscal year (`年度`), weekday/holiday, JPY and tax/rounding/invoice behavior follow explicit domain contracts.
+- [ ] Windows Chrome/Edge with Japanese IME, macOS Safari/Chrome with Japanese input, iOS Japanese keyboard, and Android Japanese keyboard were covered to the level promised by product support.
+- [ ] Japanese screen-reader output was tested for high-accessibility products; WCAG 2.2 AA verification was supplemented with JIS X 8341-3-oriented checks when applicable.
+- [ ] 200% zoom/reflow, user/fallback font behavior, long Japanese text, mixed scripts, and representative `ja-JP` visual regression were inspected.
+- [ ] Representative target-user usability evidence exists for consequential Japan-native claims; source review or Japanese-character presence alone is not treated as behavioral proof.
+- [ ] Privacy, commerce, subscription, payment, identity, consent, or legal behavior cites current authoritative sources and maintained policy; unresolved authority was escalated rather than guessed.
+
 ## Stability, visual, and component QA
 
 - [ ] Scrollbars are tokenized, visible/usable, and layout-stable.

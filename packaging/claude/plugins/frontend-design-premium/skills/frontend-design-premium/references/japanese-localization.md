@@ -1,6 +1,6 @@
 # Japanese Localization Contract
 
-Read this when the product locale is Japanese or when changing dates, calendars, search, validation, numbers, currency, addresses, names, or component-library locale providers.
+Read this when the product locale is Japanese or when changing Japanese input, dates, calendars, search, validation, numbers, currency, addresses, names, or component-library locale providers. For audience, content, visual, or regulated decisions, also load the corresponding Japan references routed from `SKILL.md §0b`.
 
 ## Locale foundation
 
@@ -29,6 +29,8 @@ Read this when the product locale is Japanese or when changing dates, calendars,
 - Confirm the first day of week and holiday/business-day requirements from the chosen date library/product contract; do not assume from language alone.
 - Distinguish date-only values from instants. A birthday or business date must not shift because of timezone conversion.
 - Make time zone visible where ambiguity affects decisions or audit trails.
+- Confirm whether the domain uses calendar year or fiscal year (`年度`), and define the fiscal-year boundary from the business contract.
+- Confirm weekday, national-holiday, company-holiday, and business-day behavior from a maintained source; locale alone does not establish operational calendars.
 
 ### Preset date-range labels
 
@@ -47,13 +49,16 @@ When offering quick-select ranges in filters or reports, use natural Japanese:
 
 Use consistent labels across all filters and reports. Do not mix `今日` in one filter and `本日` in another.
 
-## Japanese IME and search
+## Japanese IME and interactive input
 
-- Do not dispatch debounced search while `InputEvent.isComposing` is true or between `compositionstart` and `compositionend`.
-- Dispatch the final query after composition ends.
-- Do not bind Enter to submit/search while it is committing IME composition.
+- Track `compositionstart`, `compositionend`, and `InputEvent.isComposing` for every interaction that reacts while typing—not only search.
+- Do not submit, execute a keyboard shortcut, autosave, validate, advance a wizard, select a combobox option, update a character counter, or dispatch remote work while composition is active when that action would consume incomplete text.
+- Dispatch the final value after composition ends, then apply the normal debounce/validation policy exactly once.
+- Do not bind Enter to submit/search or close a command palette while it is committing IME composition. Avoid shortcut detection based only on `keyCode === 229`; use composition state and actual event semantics.
+- Character limits are defined in user-perceived characters or the domain's explicit storage unit. Do not assume JavaScript UTF-16 `.length` matches the requirement.
+- Autocomplete and combobox results must not replace the composing text, steal selection, or announce stale suggestions.
 - Cancel stale requests and ensure older responses cannot replace newer Japanese queries.
-- Decide normalization (width, kana, case) with the search backend. Never silently normalize only the client if it changes matching semantics.
+- Decide normalization (full-/half-width, hiragana/katakana, case, diacritics, punctuation, and whitespace) with the backend/domain owner. Never silently normalize only the client if it changes matching, identity, or stored-value semantics.
 
 ## Numbers, money, names, and addresses
 
@@ -62,24 +67,27 @@ Use consistent labels across all filters and reports. Do not mix `今日` in one
 - Format JPY with `Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" })`. Do not hardcode `¥` placement or decimal rules.
 - **JPY has no decimal places.** Never show `.00` or `¥1,000.00`. The correct display is `¥1,000` or `￥1,000`.
 - For non-JPY currencies (USD, EUR), always show the appropriate decimal places and currency symbol. Do not strip decimals from non-JPY currencies because the primary locale is Japanese.
+- Tax-inclusive/exclusive display, consumption-tax labels, rounding, invoices, and receipts come from the commerce/accounting contract—not from `ja-JP` formatting. Load `japan-regulated-flows.md` when those decisions affect a regulated flow.
 
 ### Phone numbers
 
-- Japanese phone numbers are typically `0X-XXXX-XXXX` or `0XX-XXX-XXXX`. Use a single input with automatic formatting or separate fields with clear labels.
-- Accept half-width digits (`03-1234-5678`) and store in half-width. Do not store full-width digits (`０３−１２３４−５６７８`).
-- Do not force a country code unless the product serves an international audience. In Japan-only products, `+81` prefix is optional.
+- Japanese landline and mobile numbers have multiple valid lengths and groupings; IP phones and international numbers add more. Prefer a proven phone parser or a domain-supplied validation contract over one hardcoded regex.
+- Accept common full- and half-width entry, present the normalized value for review when needed, and store the canonical representation defined by the domain contract. Do not silently change an identity/contact value without a documented rule.
+- Decide national versus E.164 storage separately from display. Do not reject `+81` or non-Japanese numbers when foreign residents, international contacts, or global accounts are in scope.
 
 ### Postal codes
 
-- Japanese postal code format: `XXX-XXXX` (3 digits + hyphen + 4 digits). Example: `100-0001`.
+- Domestic Japanese postal code format is `XXX-XXXX` (3 digits + hyphen + 4 digits), for example `100-0001`; provide a separate international-address path when the audience requires it.
 - Accept and store in half-width. Validate the pattern but do not assume you can look up the address from the code.
 - If address auto-fill from postal code is a product goal, integrate a third-party address lookup API (e.g., 郵便番号検索 API). Do not build your own lookup.
 
 ### Names
 
-- Do not force Western first-name/last-name ordering. The product data model should have separate fields for family name (`姓`) and given name (`名`) in that visual order, unless the domain explicitly specifies Western order.
-- Always show `姓` / `名` labels, not `First name` / `Last name`.
-- Accept full-width characters for names. Half-width katakana is common in some systems; clarify the requirement with the product owner.
+- Do not force Western first-name/last-name ordering. For Japanese personal names, separate family name (`姓`) and given name (`名`) in that visual order when the domain requires split fields.
+- Preserve a path for Latin-script names, mononyms, middle names, legal names, and preferred display names when foreign residents or global identities are in scope. Do not coerce all people into a two-field Kanji model.
+- Use labels that match the active language and data contract; do not merely relabel a Western model while keeping Western assumptions.
+- Accept the scripts and width forms authorized by the domain, then normalize only for a documented purpose. Never rewrite the user's legal/display name silently.
+- For organizations, support legal corporate names and both prefix/suffix forms such as `株式会社〇〇` and `〇〇株式会社`; do not parse company type with naive string removal.
 - For search: allow searching by either family name or given name, and by partial match. Japanese users commonly search by family name only.
 
 ### Addresses
@@ -88,11 +96,13 @@ Use consistent labels across all filters and reports. Do not mix `今日` in one
 - Do not rearrange fields to match Western ordering (street → city → state → zip).
 - Prefecture field: use a dropdown or autocomplete of all 47 prefectures, not a free-text input.
 - Labels in Japanese: `郵便番号` (postal code), `都道府県` (prefecture), `市区町村` (city/ward), `番地` (street/block), `建物名` (building name, optional).
+- Postal-code auto-fill is a suggestion. Let the user review and correct every address segment, including building name and nonstandard locality text.
+- Preserve the submitted representation when it is legally or operationally significant; a normalized search key must not replace the display or source value.
 
 ### Furigana / Yomigana
 
 - If the product handles names that will be read aloud, sorted by reading, or searched by pronunciation, add furigana fields: `姓（フリガナ）` and `名（フリガナ）`.
-- Store in full-width katakana. Validate that only katakana, long vowels (ー), and spaces are entered.
+- Follow the domain's required script and normalization. Do not use an over-restrictive Katakana-only regex without testing middle dots, long-vowel marks, iteration marks, spaces, foreign names, and other valid readings for the audience.
 - Furigana is not the same as romanized name (romaji). Do not auto-generate one from the other without product approval.
 
 ## Copy and layout
@@ -121,7 +131,7 @@ Use natural Japanese action verbs, not generic translated `OK` / `Cancel`.
 | Add | `追加` | `OK` |
 | Remove | `削除` | `OK` |
 
-Do not use machine-translated button labels. Every dialog action must be reviewed by a native Japanese speaker or product copy specialist.
+Do not use machine-translated button labels. Follow `japanese-content-design.md`; critical or high-traffic actions require native Japanese review with relevant domain context.
 
 ### Toast and feedback messages
 
@@ -148,8 +158,8 @@ Do not use machine-translated button labels. Every dialog action must be reviewe
 
 ### File names
 
-- Use ASCII-only file names for exports (e.g., `analysis_2024_01_15.csv`), not Japanese characters. Different OS/browser combinations handle Japanese file names inconsistently during download.
-- If the product must use Japanese file names, test on Windows (Chrome, Edge), macOS (Safari, Chrome), and Linux.
+- Choose ASCII or Japanese file names from audience and interoperability evidence rather than a blanket rule. Sanitize path separators/control characters and emit standards-compliant download headers.
+- Test the chosen naming policy on the supported browser/OS matrix, including Windows Excel workflows when they matter.
 
 ## Validation and feedback
 
@@ -170,10 +180,10 @@ Do not use machine-translated button labels. Every dialog action must be reviewe
 <span class="error">メールアドレスを入力してください</span>
 ```
 
-## Minimum locale test pass
+## Minimum locale and input test pass
 
 1. Switch to Japanese locale and confirm no fallback English in owned UI.
-2. Enter text with Japanese IME in search and normal fields.
+2. Enter text with Japanese IME in search and normal fields; verify Enter, shortcuts, validation, autosave, counters, autocomplete, and command palettes do not consume composition prematurely.
 3. Open and keyboard-operate the calendar.
 4. Check date-only, JST timestamp, JPY (no decimals), large numbers, and sorting.
 5. Inspect narrow layouts with long Japanese labels and mixed identifiers.
@@ -181,4 +191,6 @@ Do not use machine-translated button labels. Every dialog action must be reviewe
 7. Export a CSV and open in Excel — confirm no mojibake.
 8. Submit a form with required-field markers — confirm the marker style is consistent.
 9. Use preset date-range filters — confirm natural Japanese labels.
-10. Enter a Japanese address (postal code → prefecture → city) — confirm the field order matches Japan Post convention.
+10. Enter and review a Japanese address (postal code → prefecture → city → street/block → building); confirm auto-fill remains editable.
+11. Exercise full-/half-width, kana, Latin-name, corporate-name, phone, and long-identifier cases from the actual audience contract.
+12. Confirm frontend and backend use the same documented normalization, fiscal-year, timezone, tax, and calendar policies where applicable.

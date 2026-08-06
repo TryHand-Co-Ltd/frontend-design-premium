@@ -49,6 +49,18 @@ The format is alpha. Re-check it before parser/export automation. Exact tokens t
 - [MDN File drag and drop](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop) and [`<input type="file">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file) — drop-zone picker alternatives, accepted files, and native input behavior.
 - [MDN online/offline events](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/onLine) — connectivity signals are inherently unreliable hints and require request-level handling.
 
+## Japan-market content, layout, and regulation
+
+- [Digital Agency Design System: Style guides](https://design.digital.go.jp/dads/guidance/style-guides/) — a design system is a foundation; each service still needs a style guide grounded in its information architecture and users.
+- [Digital Agency Design System: Typography](https://design.digital.go.jp/dads/foundations/typography/) and [typography accessibility](https://design.digital.go.jp/dads/foundations/typography/accessibility/) — Japanese-capable fonts, readable baseline sizing, non-italic emphasis, and standard/dense text roles.
+- [W3C Japanese Layout Requirements (JLREQ)](https://www.w3.org/International/jlreq/?lang=en) — Japanese composition, mixed scripts, line length, punctuation, and line-breaking requirements.
+- [Digital Agency Design System: Input text usage](https://design.digital.go.jp/dads/components/input-text/usage/) — Japanese form labels, required-state presentation, correction guidance, and validation timing baseline.
+- [Digital Agency: Web accessibility introduction guidebook](https://www.digital.go.jp/resources/introduction-to-web-accessibility-guidebook) — Japanese public-sector accessibility practice referencing WCAG and JIS X 8341-3.
+- [Personal Information Protection Commission: laws and guidelines](https://www.ppc.go.jp/personalinfo/legal/) — authoritative starting point for APPI/personal-information obligations; legal/product owners determine applicability.
+- [Consumer Affairs Agency: mail-order final confirmation guidance](https://www.no-trouble.caa.go.jp/what/mailorder/guidelines.html) — ecommerce disclosure, review, correction, and final-confirmation considerations; re-check current authority for each implementation.
+
+These sources are baselines and routing evidence, not a universal Japanese theme or substitute for target-user research, domain policy, native content review, or legal advice.
+
 ## Product UX decisions
 
 - [Material Design: Confirmation & acknowledgement](https://m1.material.io/patterns/confirmation-acknowledgement.html) — confirm consequential actions, acknowledge completion, and avoid confirming negligible/reversible changes.

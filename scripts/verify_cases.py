@@ -1,82 +1,209 @@
-"""Verify all 15 case study requirements are covered in the skill files."""
-import re, sys
+"""Verify structural case-study coverage and Japan-readiness proof wiring.
 
-sys.stdout.reconfigure(encoding='utf-8')
+This command validates skill contracts, eval claims, negative oracles, and
+fixture wiring. It deliberately does not claim browser behavior or native-copy
+quality; those require the evidence types declared by each eval.
+"""
 
-def check(pattern, filepath, flags=re.IGNORECASE):
-    text = open(filepath, encoding='utf-8').read()
-    return bool(re.search(pattern, text, flags))
+from __future__ import annotations
 
-checks = {
-    "1. Table pagination + load-more grill": (
-        "SKILL.md + decision-matrix.md",
-        check(r'pagination.*load.?more|Load more.*server pagination|decision-matrix.*pagination', 'SKILL.md')
-    ),
-    "2. Hover style + cursor: pointer": (
-        "SKILL.md section 4 interaction states",
-        check(r'hover.*style|cursor.?pointer|clickable.*hover|pointer semantics', 'SKILL.md')
-    ),
-    "3. Custom scrollbar": (
-        "SKILL.md section 4 scrollbar",
-        check(r'scrollbar|scroll.*custom|scrollbar-gutter', 'SKILL.md')
-    ),
-    "4. No browser dialog": (
-        "SKILL.md non-negotiable + anti-patterns.md A",
-        check(r'alert.*confirm.*prompt|Never call browser.*(alert|confirm|prompt)', 'SKILL.md')
-    ),
-    "5. Button danger/success/warning/info": (
-        "SKILL.md button system emphasis x intent",
-        check(r'danger.*success.*warning|emphasis.*intent|semantic tones|Button system', 'SKILL.md')
-    ),
-    "6. Cross-screen consistency": (
-        "SKILL.md section 4 + consistency-system.md + UX-CONTRACT",
-        check(r'consistency.*screen|cross.screen.*consistency|same operation.*same.*label', 'SKILL.md')
-    ),
-    "7. textarea resize: none": (
-        "interaction-contract.md textarea section",
-        check(r'resize.*none|textarea.*resize', 'references/interaction-contract.md')
-    ),
-    "8. Password/secret mask + reveal": (
-        "interaction-contract.md password section",
-        check(r'password.*reveal|secret.*input|mask.*show.*hide|Password/secret/key', 'references/interaction-contract.md')
-    ),
-    "9. Disable HTML5 validation": (
-        "SKILL.md noValidate + anti-patterns.md H",
-        check(r'noValidate|novalidate|native.*validation|HTML5.*validation', 'SKILL.md')
-    ),
-    "10. Search clear (X) + debounce 300ms": (
-        "SKILL.md search section + anti-patterns.md",
-        check(r'clear.*button.*search|X.*button.*clear|debounce.*300|IME.*safe.*search', 'SKILL.md')
-    ),
-    "11. Japanese locale": (
-        "references/japanese-localization.md (210 lines)",
-        check(r'Japanese|ja-JP|locale', 'references/japanese-localization.md')
-    ),
-    "12. Layout stability (no jump)": (
-        "SKILL.md layout stability section",
-        check(r'layout.*stable|layout.*jump|scrollbar.*stable|stable.*layout', 'SKILL.md')
-    ),
-    "13. Destructive confirmation dialog": (
-        "SKILL.md dialogs + interaction-contract.md dialog",
-        check(r'destructive.*confirm|confirm.*destruct|confirmation.*dialog|Confirm destructive', 'SKILL.md')
-    ),
-    "14. Proactive DESIGN.md creation": (
-        "SKILL.md section 1 step 2",
-        check(r'create DESIGN\.md|no maintained design.*create|proactively.*create', 'SKILL.md')
-    ),
-    "15. Inherit from frontend-design runtime": (
-        "SKILL.md section 0 + resolve_frontend_design.py",
-        check(r'Load.*upstream.*skill|composition.*not.*fork|runtime.*inherit|resolve_frontend_design', 'SKILL.md')
-    ),
+import json
+import re
+import sys
+from pathlib import Path
+
+sys.stdout.reconfigure(encoding="utf-8")
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def read(relative: str) -> str:
+    return (ROOT / relative).read_text(encoding="utf-8")
+
+
+def contains(relative: str, *patterns: str) -> bool:
+    text = read(relative)
+    return all(re.search(pattern, text, re.IGNORECASE | re.MULTILINE) for pattern in patterns)
+
+
+legacy_checks = {
+    "Table pagination + load-more decision": contains("SKILL.md", r"pagination", r"load.?more"),
+    "Hover style + pointer semantics": contains("SKILL.md", r"hover", r"pointer"),
+    "Custom scrollbar and stability": contains("SKILL.md", r"scrollbar", r"layout stability"),
+    "No browser-native dialogs": contains("SKILL.md", r"alert\(\).*confirm\(\).*prompt\(\)"),
+    "Button emphasis and semantic intent": contains("SKILL.md", r"emphasis", r"intent"),
+    "Cross-screen consistency": contains("SKILL.md", r"Cross-screen consistency"),
+    "Textarea resize contract": contains("references/interaction-contract.md", r"resize:\s*none"),
+    "Password mask and reveal": contains("references/interaction-contract.md", r"Password/secret/key", r"reveal"),
+    "Disable native validation UI": contains("SKILL.md", r"noValidate|novalidate"),
+    "Clearable debounced IME-safe search": contains("SKILL.md", r"clear", r"debounce", r"IME"),
+    "Destructive app-owned confirmation": contains("SKILL.md", r"destructive", r"confirmation"),
+    "Proactive DESIGN.md lifecycle": contains("SKILL.md", r"DESIGN\.md", r"create"),
+    "Runtime composition with frontend-design": contains("SKILL.md", r"Load the upstream skill", r"composition"),
 }
 
-all_ok = True
-for name, (where, status) in checks.items():
-    icon = "PASS" if status else "FAIL"
-    if not status: all_ok = False
-    print(f"  {icon}: {name}")
-    print(f"       -> {where}")
 
-print(f"\nOverall: {'ALL 15/15 COVERED' if all_ok else 'SOME FAILURES'}")
-print(f"File: SKILL.md ({open('SKILL.md',encoding='utf-8').read().count(chr(10))+1} lines)")
-print(f"Refs: {len(list(__import__('pathlib').Path('references').glob('*.md')))} .md files")
+required_japan_headings = {
+    "references/japan-market-context.md": [
+        "## Separate the three decisions",
+        "## Market gate",
+        "## Evidence precedence",
+        "## Anti-stereotype guardrail",
+    ],
+    "references/japanese-content-design.md": [
+        "## Voice and register",
+        "## Actions and guidance",
+        "## Review gate",
+    ],
+    "references/japanese-visual-layout.md": [
+        "## Typography foundation",
+        "## Composition and line breaking",
+        "## Density and hierarchy",
+    ],
+    "references/japanese-localization.md": [
+        "## Japanese IME and interactive input",
+        "### Names",
+        "### Addresses",
+        "## Minimum locale and input test pass",
+    ],
+    "references/japan-regulated-flows.md": [
+        "## Authority gate",
+        "## Privacy and consent",
+        "## Commerce and subscriptions",
+    ],
+}
+
+
+def japan_reference_structure() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    for relative, headings in required_japan_headings.items():
+        path = ROOT / relative
+        if not path.is_file():
+            failures.append(f"missing {relative}")
+            continue
+        text = path.read_text(encoding="utf-8")
+        for heading in headings:
+            if heading not in text:
+                failures.append(f"{relative} missing {heading!r}")
+    return not failures, failures
+
+
+def japan_routing() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    skill = read("SKILL.md")
+    gate_heading = "## 0b. Japan-market gate"
+    if gate_heading not in skill:
+        return False, [f"SKILL.md missing routing token {gate_heading!r}"]
+    gate = skill.split(gate_heading, 1)[1].split("## 1.", 1)[0]
+    required_in_gate = [
+        "Japanese locale",
+        "Japan market",
+        "Japanese content/visual design",
+        "including marketing",
+        "references/japan-market-context.md",
+        "references/japanese-content-design.md",
+        "references/japanese-visual-layout.md",
+        "references/japanese-localization.md",
+        "references/japan-regulated-flows.md",
+    ]
+    for token in required_in_gate:
+        if token not in gate:
+            failures.append(f"Japan-market gate missing routing token {token!r}")
+    register = skill.split(gate_heading, 1)[0]
+    if "Japan-targeted marketing page is not exempt" not in register:
+        failures.append("register gate does not explicitly retain Japan-targeted marketing rules")
+    if re.search(r"Do \*\*not\*\* force .*Japanese localization on a marketing page", skill):
+        failures.append("legacy marketing exemption still bypasses Japan-facing rules")
+    return not failures, failures
+
+
+def japan_eval_proof() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    data = json.loads(read("evals/evals.json"))
+    cases = {case["id"]: case for case in data.get("evals", [])}
+    required_claims = {
+        "market_context",
+        "native_copy_typography",
+        "ime_non_search",
+        "regulated_escalation",
+        "anti_stereotype",
+        "runtime_verification",
+    }
+    matrix = data.get("japan_readiness_claims", {})
+    if set(matrix) != required_claims:
+        failures.append(
+            "claim matrix must contain exactly: " + ", ".join(sorted(required_claims))
+        )
+    for claim in sorted(required_claims):
+        ids = matrix.get(claim, [])
+        if not ids:
+            failures.append(f"claim {claim!r} has no eval")
+        for case_id in ids:
+            case = cases.get(case_id)
+            if case is None:
+                failures.append(f"claim {claim!r} references missing eval #{case_id}")
+                continue
+            if claim not in case.get("claims", []):
+                failures.append(f"eval #{case_id} does not declare {claim!r}")
+            if not case.get("negative_oracle"):
+                failures.append(f"eval #{case_id} has no negative_oracle")
+            if not case.get("evidence_required"):
+                failures.append(f"eval #{case_id} has no evidence_required")
+            for fixture in case.get("files", []):
+                if not (ROOT / "evals" / fixture).is_file():
+                    failures.append(f"eval #{case_id} missing evals/{fixture}")
+
+    runtime_ids = matrix.get("runtime_verification", [])
+    if not any(
+        "automated-interaction-test" in cases[case_id].get("evidence_required", [])
+        for case_id in runtime_ids
+        if case_id in cases
+    ):
+        failures.append("runtime verification lacks an automated interaction-test case")
+    if not any(
+        any("native" in evidence for evidence in cases[case_id].get("evidence_required", []))
+        for case_id in matrix.get("native_copy_typography", [])
+        if case_id in cases
+    ):
+        failures.append("native copy/typography lacks native-review evidence")
+
+    ime_fixture = read("evals/fixtures/jp-ime-autosave.tsx")
+    if "onCompositionStart" in ime_fixture or "isComposing" in ime_fixture:
+        failures.append("IME negative fixture is already guarded; it no longer falsifies the claim")
+    checkout_fixture = read("evals/fixtures/japan-checkout.tsx")
+    if "aria-label=\"Confirm order\"" not in checkout_fixture or ">OK<" not in checkout_fixture:
+        failures.append("checkout negative fixture no longer contains copy leakage")
+    return not failures, failures
+
+
+def report(name: str, status: bool, failures: list[str] | None = None) -> bool:
+    print(f"  {'PASS' if status else 'FAIL'}: {name}")
+    for failure in failures or []:
+        print(f"       -> {failure}")
+    return status
+
+
+def main() -> int:
+    all_ok = True
+    print("Legacy structural contracts")
+    for name, status in legacy_checks.items():
+        all_ok &= report(name, status)
+
+    print("\nJapan-readiness structural proof")
+    status, failures = japan_reference_structure()
+    all_ok &= report("Direct references and required contracts", status, failures)
+    status, failures = japan_routing()
+    all_ok &= report("Independent market/locale/content routing", status, failures)
+    status, failures = japan_eval_proof()
+    all_ok &= report("Claim matrix, negative oracles, evidence, and fixtures", status, failures)
+
+    print(
+        "\nBoundary: PASS proves repository wiring only; browser behavior, native-copy "
+        "quality, target-user fit, and legal applicability require declared external evidence."
+    )
+    print(f"Overall: {'STRUCTURAL COVERAGE PASS' if all_ok else 'STRUCTURAL COVERAGE FAIL'}")
+    return 0 if all_ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

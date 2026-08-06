@@ -1,16 +1,15 @@
 ---
 name: frontend-design-premium
-description: Production UX and durable design-context layer that must be used together with the upstream frontend-design skill when building, modifying, reviewing, or refactoring application UI. Use for dashboards, admin tools, SaaS screens, forms, tables, CRUD flows, multi-screen apps, design systems, and localized products—even when the request only says “build”, “implement”, or names one screen. Proactively creates or maintains project DESIGN.md taste context, enforces cross-screen behavioral consistency, resilient interaction states, localization, layout stability, accessibility, and verification.
+description: Production UX and durable design-context layer that must be used together with the upstream frontend-design skill when building, modifying, reviewing, or refactoring application UI. Use for dashboards, admin tools, SaaS screens, forms, tables, CRUD flows, multi-screen apps, design systems, localized products, Japan-market products, and Japanese-facing UI—even when the request only says “build”, “implement”, or names one screen. Proactively creates or maintains project DESIGN.md taste context, enforces cross-screen behavioral consistency, resilient interaction states, localization, Japan-native market/content/visual routing, layout stability, accessibility, and verification.
 metadata:
   compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
   author: frontend-design-premium contributors
-  version: "1.2.0"
+  version: "1.3.0"
   upstream-skill: frontend-design
   upstream-tested:
     revision: "2026-02 — initial compatibility"
     digest: "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
-    tested-with-premium: "1.2.0"
-  upstream-incompatible: []
+    tested-with-premium: "1.3.0"
   compatibility-policy:
     strict-on-release: true
     warn-on-untested: true
@@ -45,11 +44,19 @@ Apply both skills. Upstream owns subject-specific aesthetic direction; this skil
 Before reading any reference, classify the target:
 
 - **Product / admin / SaaS / dashboard / forms / CRUD / tool:** premium behavior wins. You will read all relevant references, establish DESIGN.md, enforce consistency contracts, verify interaction states, and follow the full workflow below.
-- **Marketing landing page / brand site / content site / one-shot hero:** upstream `frontend-design` owns the creative direction. This premium skill adds **only** accessibility, layout stability, scrollbar, and reduced-motion rules from §4. Do **not** force UX-CONTRACT.md, consistency-system.md, data-entry-patterns.md, async-resilience.md, interaction-contract.md, or Japanese localization on a marketing page that has no interactive application behavior.
+- **Marketing landing page / brand site / content site / one-shot hero:** upstream `frontend-design` owns the creative direction. This premium skill adds accessibility, layout stability, scrollbar, and reduced-motion rules from §4. Do **not** force UX-CONTRACT.md, consistency-system.md, data-entry-patterns.md, async-resilience.md, or interaction-contract.md on a page with no application behavior. Locale, market, content, typography, trust, and accessibility rules still apply to the audience being served; a Japan-targeted marketing page is not exempt from the Japan-market gate below.
 
 If the brief mixes both (landing + admin), treat each route group by its register. The authenticated/admin section follows the full premium contract; the marketing shell follows upstream with premium polish only.
 
 Apply this gate once at the start. Revisit only when the brief pivots between registers.
+
+## 0b. Japan-market gate
+
+Trigger this gate when the active locale includes Japanese, the product serves people in Japan, the business operates in Japan, or a flow handles Japan-specific identity, address, payment, commerce, public-service, or legal data. Read `references/japan-market-context.md` and classify three independent concerns: **Japanese locale**, **Japan market**, and **Japanese content/visual design**.
+
+Record the target audience, domain/risk, device and usage scene, language policy, and evidence. A Japanese locale does not prove Japan-market scope; an English interface can still require Japan-market business and data contracts. For Japanese-facing surfaces—including marketing—read `references/japanese-content-design.md` and `references/japanese-visual-layout.md`. Read `references/japanese-localization.md` for locale, input, and Japan-specific data. Load `references/japan-regulated-flows.md` only for relevant high-risk domains.
+
+Target-user research, authoritative business/domain sources, Japanese regulation, and established comparable products override generic skill defaults. Upstream English writing conventions and pressure for aesthetic risk are advisory when they conflict with natural Japanese, domain trust, comprehension, or accessibility. Never use cultural stereotypes as a substitute for evidence. Escalate unresolved regulated behavior or legal copy instead of inventing it.
 
 ## 1. Ground product context before design work
 
@@ -223,7 +230,7 @@ Debounce remote search (300 ms default), but do not delay local clearing or expl
 
 All component-library locale packs, application messages, dates, times, numbers, currency, collation, calendar labels, validation copy, aria labels, empty states, and pagination labels follow the active product locale.
 
-For Japanese UI, use `ja-JP` and an explicit domain timezone (often `Asia/Tokyo`, but do not assume it for global data). Japanese language does not automatically mean the Japanese imperial calendar; use Gregorian unless product requirements call for era notation. Make search and debounce safe for Japanese IME input. Read `references/japanese-localization.md` whenever the active locale is Japanese or locale-sensitive components are touched.
+For Japanese UI, use `ja-JP` and an explicit domain timezone (often `Asia/Tokyo`, but do not assume it for global data). Japanese language does not automatically mean the Japanese imperial calendar; use Gregorian unless product requirements call for era notation. IME composition safety applies to submit, shortcuts, autosave, validation, counters, autocomplete, command palettes, and search—not search alone. Follow the routing in §0b rather than treating Japanese-character presence as proof of Japan-native UX.
 
 ### Accessibility and responsive behavior
 
@@ -254,7 +261,10 @@ Read references only when relevant. References are grouped into **core** (always
 - `references/consistency-system.md` — multi-screen flows, shared primitives, behavior ledger.
 - `references/decision-matrix.md` — product-choice defaults and escalation questions.
 - `references/verification-checklist.md` — mandatory pre-done verification.
-- `references/japanese-localization.md` — Japanese locale (read when locale is or includes `ja`).
+- `references/japan-market-context.md` — Japan-market/audience gate and evidence precedence (read for Japan-market or Japanese-user work).
+- `references/japanese-content-design.md` — natural Japanese voice, terminology, actions, errors, and native review (read for Japanese-facing surfaces, including marketing).
+- `references/japanese-visual-layout.md` — Japanese typography, composition, density, and anti-stereotype rules (read for Japanese-facing surfaces, including marketing).
+- `references/japanese-localization.md` — locale, IME, formatting, and Japan-specific data contracts (read when locale is or includes `ja`, or the flow handles Japan-specific data).
 
 ### On-demand packs (read when the brief touches the domain)
 
@@ -263,6 +273,7 @@ Read references only when relevant. References are grouped into **core** (always
 - **LLM streaming:** `references/llm-streaming.md` — streaming chat, SSE, abort, message display, auto-scroll.
 - **Permission UI:** `references/permission-ui.md` — hide/disable/403, clipboard copy, role-based feature access.
 - **Layer/overlay:** `references/layer-contract.md` — z-index scale, dialog/drawer/toast stacking, focus trap, portal conflicts.
+- **Japan regulated flows:** `references/japan-regulated-flows.md` — authority and escalation gate for Japan-market privacy, commerce, subscription, payment, identity, consent, or other regulated work.
 - **Electron dual-surface:** `references/electron-dual-surface.md` — token/behavior sync for apps with both Electron and web frontends.
 - **E2E audit:** `references/e2e-audit-prompt.md` — reusable prompt for static contract audits.
 - **Research:** `references/research-sources.md` — rationale and source links.
