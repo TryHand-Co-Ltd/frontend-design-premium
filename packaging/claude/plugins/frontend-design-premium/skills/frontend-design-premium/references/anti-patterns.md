@@ -350,6 +350,20 @@ if (!hasRole("admin")) return <ForbiddenPage resource="transports" />;
 
 ---
 
+## P. Native select used when authored popup geometry is required
+
+**Search:** `<select` in a screen whose design requires the opened option popup to match the trigger's width, border, radius, spacing, scrolling, or placement.
+
+Also search for CSS that targets `option`, `select option`, or `appearance: none` and claims to style the opened native popup.
+
+**Why wrong:** The opened native select popup is browser- or operating-system-owned on major platforms. Styling the closed `<select>` or its `<option>` elements cannot guarantee the popup's outer dimensions, border thickness, radius, option rendering, or collision behavior.
+
+**Fix:** First make the decision explicit. Keep native select only when platform-owned popup geometry is accepted. When geometry is authored, replace it with the project's maintained accessible Select/Listbox primitive; share trigger/content border, radius, width, and density tokens; portal the popup; and use collision-aware bounded scrolling. Do not build a custom ARIA listbox from scratch.
+
+**Verification:** Open the popup in a real browser. Compare trigger and listbox bounding rectangles (outer width difference no greater than 1 CSS px), computed border widths/tokens, alignment, focus/selection, keyboard behavior, long options, scrolling, zoom, and viewport-edge collision.
+
+---
+
 ## Verification checklist
 
 Before finalising any diff that touches UI code, grep for at least:
@@ -381,6 +395,9 @@ rg '<title>' public/index.html public/index.htm 2>/dev/null || rg '<title>' src/
 
 # 403 as 404 pattern
 rg 'if.*role.*NotFound' src/; rg 'redirect.*403' src/
+
+# Native select where popup geometry is authored (review each match in context)
+rg '<select|select\s+option|appearance:\s*none' src/
 ```
 
 At least the first two searches must return zero results for non-trivial UI changes.

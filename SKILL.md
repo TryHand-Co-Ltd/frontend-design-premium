@@ -213,6 +213,7 @@ Do not communicate intent by color alone. Keep icon, label, focus ring, contrast
 ### Forms and sensitive values
 
 - Put `novalidate`/`noValidate` on product forms and own the validation experience. Do not invoke native validation bubbles with `reportValidity()`.
+- For every single-select dropdown, explicitly choose native or authored behavior. Keep a native `<select>` only when an operating-system-owned popup is acceptable; when popup width, border, radius, spacing, or collision behavior is part of the visual contract, use the project's maintained accessible Select/Listbox primitive and follow `references/data-entry-patterns.md`.
 - Keep semantic types and useful constraint metadata where they aid keyboards, autofill, parsing, or app validation; disabling browser UI does not mean discarding semantics.
 - Show errors in text, associate them with fields, preserve entered values, focus/scroll to the first invalid field on submit, and include a correction hint.
 - Prevent duplicate submit. During submit, preserve button dimensions and make busy state perceivable.
@@ -256,7 +257,7 @@ Read references only when relevant. References are grouped into **core** (always
 - `references/consistency-migration.md` — inventory, canonicalization, risk-prioritized rollout, enforcement, legacy retirement.
 - `references/interaction-contract.md` — foundational controls, forms, tables, overlays, toasts, state behavior.
 - `references/navigation-layout.md` — breadcrumbs, tabs, navigation shells, responsive tables, truncation, shortcuts, menus, print.
-- `references/data-entry-patterns.md` — bulk selection, upload, combobox, date range, inline edit, disclosures, steppers, sliders, chips, drag, filter chips, density.
+- `references/data-entry-patterns.md` — read for forms containing a single-select/select dropdown, combobox/autocomplete, advanced input, bulk workflow, direct manipulation, or density control.
 - `references/async-resilience.md` — optimistic work, drafts, offline, conflict, session expiry, progress, alerts, audit logs.
 - `references/consistency-system.md` — multi-screen flows, shared primitives, behavior ledger.
 - `references/decision-matrix.md` — product-choice defaults and escalation questions.
@@ -286,7 +287,7 @@ At minimum:
 
 1. Confirm `DESIGN.md` was read or appropriately created/reconciled; lint it after changes, verify the documented runtime token mapping, and inspect drift against generated/adapted tokens and shared components.
 2. Run the repository's formatter, typecheck, tests, and build that cover the change.
-3. Exercise the changed workflow in a real browser when available, including success, failure, loading, empty/no-results, keyboard, and one narrow viewport.
+3. Exercise the changed workflow in a real browser when available, including success, failure, loading, empty/no-results, keyboard, one narrow viewport, and the open state of any select/listbox popup.
 4. Compare the result with at least one sibling screen for visual language, navigation, feedback, labels, and state behavior.
 5. Exercise applicable offline, stale/conflict, session, locale/theme, long-content, and reduced-motion states rather than testing only the happy path.
 6. Search changed code for the grep-able violations catalogued in `references/anti-patterns.md` — native dialogs, uncancelled search races, non-semantic click targets, missing states, screen-local duplicates, and other common issues. Every match is a bug; fix all of them.

@@ -296,6 +296,14 @@
       "claims": ["native_copy_typography"],
       "evidence_required": ["native-review", "browser-screenshot", "market-evidence"],
       "negative_oracle": "Fails if the marketing register skips Japanese content/typography rules or if it is forced through application-only contracts."
+    },
+    {
+      "id": 39,
+      "prompt": "Fix this Japanese account-type select. The closed trigger has the intended border and width, but the opened option popup uses a thinner border and different width. Keep the control accessible and make the popup geometry part of the component contract.",
+      "expected_output": "Explicitly decides between a native select and an authored accessible Select/Listbox. Because popup geometry is a visual requirement, it replaces the native select with the project's maintained primitive, aligns the popup to the trigger, matches outer width within 1 CSS px, reuses border/radius/density tokens, portals with collision handling and bounded scrolling, preserves Japanese labels and form integration, and verifies the open popup in a real browser with keyboard, zoom, long-option, and viewport-edge cases.",
+      "files": ["fixtures/native-select-popup-mismatch.tsx"],
+      "evidence_required": ["automated-interaction-test", "browser-workflow", "browser-screenshot"],
+      "negative_oracle": "Fails if it tries to style native option elements, claims CSS can guarantee the operating-system popup geometry, or checks only the closed trigger."
     }
   ]
 }

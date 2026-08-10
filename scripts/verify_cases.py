@@ -176,6 +176,55 @@ def japan_eval_proof() -> tuple[bool, list[str]]:
     return not failures, failures
 
 
+def single_select_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"single-select|select dropdown",
+            r"native.*authored|authored.*native",
+            r"data-entry-patterns\.md",
+        ],
+        "references/data-entry-patterns.md": [
+            r"Single-select dropdowns",
+            r"1 CSS px",
+            r"listbox",
+            r"portal",
+            r"collision",
+        ],
+        "references/anti-patterns.md": [
+            r"Native select used when authored popup geometry is required",
+            r"<select",
+            r"option",
+        ],
+        "references/verification-checklist.md": [
+            r"native.*authored|authored.*native",
+            r"1 CSS px",
+            r"open popup",
+            r"long option",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 39), None)
+    if case is None:
+        failures.append("missing eval #39")
+    else:
+        fixture = ROOT / "evals" / "fixtures/native-select-popup-mismatch.tsx"
+        if not fixture.is_file():
+            failures.append("eval #39 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if "<select" not in fixture_text or "<option" not in fixture_text:
+                failures.append("eval #39 fixture no longer reproduces the native-select mismatch")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #39 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
 def report(name: str, status: bool, failures: list[str] | None = None) -> bool:
     print(f"  {'PASS' if status else 'FAIL'}: {name}")
     for failure in failures or []:
@@ -196,6 +245,10 @@ def main() -> int:
     all_ok &= report("Independent market/locale/content routing", status, failures)
     status, failures = japan_eval_proof()
     all_ok &= report("Claim matrix, negative oracles, evidence, and fixtures", status, failures)
+
+    print("\nSingle-select popup structural proof")
+    status, failures = single_select_contract()
+    all_ok &= report("Native/authored decision, geometry, anti-pattern, and eval", status, failures)
 
     print(
         "\nBoundary: PASS proves repository wiring only; browser behavior, native-copy "

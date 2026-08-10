@@ -68,6 +68,9 @@ Use this before finishing every implementation or review. Mark non-applicable it
 ## Forms and advanced inputs
 
 - [ ] Native browser validation bubbles are disabled with `novalidate`/`noValidate`; no `reportValidity()` UX.
+- [ ] Every single-select makes the native or authored popup decision explicit; native is used only when platform-owned popup geometry is acceptable.
+- [ ] For an authored Select/Listbox, the open popup matches the trigger's outer width within 1 CSS px, aligns to it, and shares border-width/color, radius-family, and density tokens.
+- [ ] The open popup was verified in a real browser for keyboard/focus/selection, long options, narrow viewports, 200% zoom, viewport-edge collision, bounded height, and scrolling.
 - [ ] App validation shows text errors, correction guidance, field association, and first-error focus.
 - [ ] Duplicate submits are blocked without changing button dimensions.
 - [ ] Textareas have `resize: none` plus adequate/autogrowing space.

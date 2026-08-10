@@ -26,6 +26,22 @@ States: idle, drag-over, validating, queued, uploading, paused/cancelled when su
 - Preview untrusted content safely; revoke object URLs and avoid decoding huge media on the main thread.
 - Announce status changes without flooding live regions. Keep layout stable as rows enter progress/error states.
 
+## Single-select dropdowns
+
+Decide whether the popup may remain platform-owned before choosing the component:
+
+- Use a native `<select>` only when the browser/operating-system popup appearance and geometry are acceptable. CSS on `<option>` cannot reliably control that popup across platforms.
+- When popup width, border, radius, spacing, option states, scrolling, or placement is part of the authored design, use the project's maintained accessible Select/Listbox primitive (for example, an established Reka UI, Radix UI, or Headless UI integration). Do not hand-build ARIA behavior.
+
+Treat trigger and popup as one geometry contract:
+
+- Match the popup's outer width to the trigger within **1 CSS px** and align their inline-start edges unless a documented responsive rule requires otherwise.
+- Reuse the same border-width and border-color tokens, the same radius family, and compatible control density. Do not leave the popup on a browser-default 1 px border when the trigger uses a stronger authored border.
+- Render the popup through the primitive's portal, use collision-aware placement, bound its maximum height, and keep its owned scrollbar visible and tokenized.
+- Preserve selected, highlighted, disabled, loading, empty, and error states without shifting the trigger or popup geometry.
+
+Preserve the complete interaction contract: accessible name, combobox/listbox roles supplied by the primitive, Arrow-key navigation, Enter/Space selection, Escape close, typeahead, visible focus, selected/disabled announcements, form value/touched/error integration, and localized option/accessibility text. Verify the open popup in a real browser; source-level classes on the closed trigger are not evidence that the platform popup matches.
+
 ## Combobox, autocomplete, and typeahead
 
 Use a maintained combobox primitive that follows the WAI-ARIA pattern.
