@@ -225,6 +225,155 @@ def single_select_contract() -> tuple[bool, list[str]]:
     return not failures, failures
 
 
+def date_picker_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"date picker",
+            r"browser.*owned|operating-system.*owned",
+            r"data-entry-patterns\.md",
+        ],
+        "references/data-entry-patterns.md": [
+            r"Date and date-range pickers",
+            r"native.*authored|authored.*native",
+            r"locale pack",
+            r"focus restoration",
+            r"real browser",
+        ],
+        "references/japanese-localization.md": [
+            r"native.*date input|input\[type=.date.\]",
+            r"August",
+            r"YYYY/MM/DD",
+            r"ISO 8601",
+        ],
+        "references/anti-patterns.md": [
+            r"Native date input used when localized calendar UI is required",
+            r"type=.date.",
+            r"browser.*owned|operating-system.*owned",
+        ],
+        "references/verification-checklist.md": [
+            r"native.*authored|authored.*native",
+            r"calendar.*locale",
+            r"today.*clear|clear.*today",
+            r"open.*real browser|real browser.*open",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 40), None)
+    if case is None:
+        failures.append("missing eval #40")
+    else:
+        fixture = ROOT / "evals" / "fixtures/native-date-picker-english-leak.tsx"
+        if not fixture.is_file():
+            failures.append("eval #40 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if 'type="date"' not in fixture_text or 'lang="ja"' not in fixture_text:
+                failures.append("eval #40 fixture no longer reproduces the native date-picker leak")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #40 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
+def global_scrollbar_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"global.*scrollbar|scrollbar.*global",
+            r"opt-in|per-container",
+            r"forced.?colors|high-contrast",
+        ],
+        "references/interaction-contract.md": [
+            r"global.*scrollbar|scrollbar.*global",
+            r"opt-in class|per-container opt-in",
+            r"thumb/track",
+            r"forced.?colors|high-contrast",
+        ],
+        "references/anti-patterns.md": [
+            r"Scrollbar theme requires per-container opt-in",
+            r"overflow",
+            r"global",
+        ],
+        "references/verification-checklist.md": [
+            r"global scrollbar baseline",
+            r"new scroll container",
+            r"computed.*scrollbar-color|scrollbar-color.*computed",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 41), None)
+    if case is None:
+        failures.append("missing eval #41")
+    else:
+        fixture = ROOT / "evals" / "fixtures/scrollbar-opt-in-gap.tsx"
+        if not fixture.is_file():
+            failures.append("eval #41 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if "overflow-x-auto" not in fixture_text or "ui-scroll-container" in fixture_text:
+                failures.append("eval #41 fixture no longer reproduces the scrollbar opt-in gap")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #41 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
+def table_form_scroll_ownership_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"scroll ownership|scroll owner",
+            r"table panel|table surface",
+            r"form panel|long form",
+        ],
+        "references/interaction-contract.md": [
+            r"bounded.*table|table.*bounded",
+            r"natural.*height|document scrolling",
+            r"shared.*ancestor|shared.*shell",
+        ],
+        "references/anti-patterns.md": [
+            r"Table viewport sizing leaks into sibling form",
+            r"h-dvh|100vh|overflow-hidden",
+            r"scroll owner",
+        ],
+        "references/verification-checklist.md": [
+            r"table.*form|form.*table",
+            r"scroll owner|scroll ownership",
+            r"200% zoom",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 42), None)
+    if case is None:
+        failures.append("missing eval #42")
+    else:
+        fixture = ROOT / "evals" / "fixtures/shared-table-form-fixed-shell.vue"
+        if not fixture.is_file():
+            failures.append("eval #42 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            required_smells = ["h-dvh", "overflow-hidden", "<form"]
+            if not all(smell in fixture_text for smell in required_smells):
+                failures.append("eval #42 fixture no longer reproduces shared-shell clipping")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #42 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
 def report(name: str, status: bool, failures: list[str] | None = None) -> bool:
     print(f"  {'PASS' if status else 'FAIL'}: {name}")
     for failure in failures or []:
@@ -249,6 +398,18 @@ def main() -> int:
     print("\nSingle-select popup structural proof")
     status, failures = single_select_contract()
     all_ok &= report("Native/authored decision, geometry, anti-pattern, and eval", status, failures)
+
+    print("\nDate-picker locale structural proof")
+    status, failures = date_picker_contract()
+    all_ok &= report("Native/authored decision, Japanese locale, anti-pattern, and eval", status, failures)
+
+    print("\nGlobal scrollbar structural proof")
+    status, failures = global_scrollbar_contract()
+    all_ok &= report("Global baseline, no opt-in gap, forced colors, and eval", status, failures)
+
+    print("\nTable/form scroll-ownership structural proof")
+    status, failures = table_form_scroll_ownership_contract()
+    all_ok &= report("Table viewport sizing remains scoped away from forms", status, failures)
 
     print(
         "\nBoundary: PASS proves repository wiring only; browser behavior, native-copy "

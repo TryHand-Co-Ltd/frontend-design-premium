@@ -4,12 +4,12 @@ description: Production UX and durable design-context layer that must be used to
 metadata:
   compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
   author: frontend-design-premium contributors
-  version: "1.3.0"
+  version: "1.4.0"
   upstream-skill: frontend-design
   upstream-tested:
     revision: "2026-02 — initial compatibility"
     digest: "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
-    tested-with-premium: "1.3.0"
+    tested-with-premium: "1.4.0"
   compatibility-policy:
     strict-on-release: true
     warn-on-untested: true
@@ -159,6 +159,8 @@ When a difference is intentional, encode it as an explicit variant with a busine
 
 Every non-trivial data table needs a deliberate dataset-navigation strategy. Do not ship an unbounded table.
 
+Assign scroll ownership before applying viewport sizing. A request to make a table fill the remaining screen applies to the table panel or table surface only; it does not authorize `100vh`/`h-dvh`, fixed height, or `overflow: hidden` on a shared page, tab shell, or ancestor merely to make the table fit. When sibling panels contain a long form, preserve that form panel's established natural-height/document-scrolling behavior unless the application already has a canonical content scroller. Bound the table through its own complete flex/min-height chain and keep its overflow internal. Treat each tab panel as an independent layout mode and verify every sibling after switching tabs.
+
 - Prefer native semantic `<table>` for read-oriented tabular data; use an ARIA grid only for genuinely spreadsheet-like keyboard interaction.
 - Keep filtering, sorting, page/cursor, page size, and selection behavior coherent and restorable. Put shareable state in the URL when architecture allows.
 - Reset or clamp paging after filter changes and deletion; never strand users on an empty out-of-range page.
@@ -176,7 +178,7 @@ Anything clickable must look and behave clickable:
 
 ### Scrollbars and layout stability
 
-Style authored scroll containers to fit the project's token system, including thumb, track, hover, and high-contrast behavior. Keep the scrollbar usable; never hide it merely for aesthetics. Use standards-based properties plus engine fallbacks only as needed. Reserve scrollbar space with `scrollbar-gutter: stable` where appearance could shift layout.
+Define one global scrollbar baseline in the application stylesheet for every scrollable surface the product owns. Tokenize thumb, track, hover, active, and high-contrast/forced-colors behavior; use standards-based properties plus engine fallbacks. The visual theme must not require a per-container opt-in class—new overflow regions inherit it automatically. Use component classes only for documented geometry exceptions such as `scrollbar-gutter: stable`, density, or a deliberately different semantic surface. Keep scrollbars visible and operable; never hide them merely for aesthetics. Scope the baseline to the application document, not browser chrome, cross-origin frames, or embedded third-party documents.
 
 The layout must not jump, reflow unexpectedly, or move controls during loading and feedback:
 
@@ -214,6 +216,7 @@ Do not communicate intent by color alone. Keep icon, label, focus ring, contrast
 
 - Put `novalidate`/`noValidate` on product forms and own the validation experience. Do not invoke native validation bubbles with `reportValidity()`.
 - For every single-select dropdown, explicitly choose native or authored behavior. Keep a native `<select>` only when an operating-system-owned popup is acceptable; when popup width, border, radius, spacing, or collision behavior is part of the visual contract, use the project's maintained accessible Select/Listbox primitive and follow `references/data-entry-patterns.md`.
+- For every date picker, explicitly choose native or authored behavior. Keep native `input[type="date"]` only when a browser/operating-system-owned popup—including its locale, labels, geometry, and accessibility behavior—is acceptable on every supported platform. When the product must own calendar language or interaction, use the project's maintained accessible date-picker primitive and follow `references/data-entry-patterns.md`.
 - Keep semantic types and useful constraint metadata where they aid keyboards, autofill, parsing, or app validation; disabling browser UI does not mean discarding semantics.
 - Show errors in text, associate them with fields, preserve entered values, focus/scroll to the first invalid field on submit, and include a correction hint.
 - Prevent duplicate submit. During submit, preserve button dimensions and make busy state perceivable.

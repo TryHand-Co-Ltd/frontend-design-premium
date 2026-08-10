@@ -364,6 +364,46 @@ Also search for CSS that targets `option`, `select option`, or `appearance: none
 
 ---
 
+## Q. Native date input used when localized calendar UI is required
+
+**Search:** `type=["']date["']` or `input[type="date"]` on a surface whose active locale, calendar labels, footer actions, geometry, or interaction must be app-owned and consistent.
+
+Also search for `lang="ja"` or a formatted closed value being cited as proof that the opened native calendar is Japanese.
+
+**Why wrong:** The open native date picker is browser- or operating-system-owned. Page language and input styling cannot guarantee its month heading, weekday labels, actions such as Today/Clear, geometry, or platform behavior. A Japanese form can therefore display an English calendar even when the closed field looks correct.
+
+**Fix:** Make the ownership decision explicit. Keep native date input only when platform-owned popup locale and behavior are accepted across the supported matrix. When the product owns the calendar UI, use the project's maintained accessible date-picker primitive, load the complete locale pack, separate ISO/typed storage from display formatting, and preserve keyboard, pointer, Escape, focus-restoration, collision, bounded-height, and scrolling behavior.
+
+**Verification:** Open the calendar in a real browser. Check month/year, weekday headers, navigation, Today/Clear/Apply/Cancel actions, placeholders, validation, and accessible names in the active locale. Exercise keyboard and pointer selection, Escape, restored trigger focus, 200% zoom, and narrow/short viewport collision. For Japanese UI, reject `August`, `Clear`, `Today`, or other fallback English.
+
+---
+
+## R. Scrollbar theme requires per-container opt-in
+
+**Search:** Scrollbar selectors scoped only to utility classes such as `.custom-scrollbar`, `.ui-scroll-container`, or component-local wrappers while other `overflow`, `overflow-x-*`, or `overflow-y-*` regions exist.
+
+Also search for newly added overflow containers that must remember a special class solely to receive thumb/track colors.
+
+**Why wrong:** The component looks correct only when its author remembers an unrelated opt-in class. New tables, dialogs, menus, and panels silently fall back to the browser default, causing visual drift and repeated review fixes.
+
+**Fix:** Put the tokenized scrollbar baseline in the application's global stylesheet so all product-owned scroll surfaces inherit thumb, track, hover, active, width, and engine-compatible styling. Keep per-container classes only for explicit geometry or semantic exceptions such as stable gutter or compact density. Preserve a forced-colors/high-contrast path and do not target browser chrome or third-party documents.
+
+**Verification:** Create or locate a scroll container with no scrollbar utility class. In a real browser, confirm the application root and that container have non-default computed `scrollbar-color`, WebKit thumb/track styles, no unwanted native arrow buttons when the design removes them, and usable forced-colors behavior.
+
+---
+
+## S. Table viewport sizing leaks into sibling form
+
+**Search:** A table-related change adds `h-dvh`, `h-screen`, `100vh`, fixed height, or `overflow-hidden` to a shared route/page/tab ancestor. Also inspect shared wrappers where one tab is a bounded table and another is a long form.
+
+**Why wrong:** Table-specific flex and overflow constraints change the scroll owner for every sibling. The table may look correctly screen-sized while the form becomes clipped, trapped in a nested scroller, or visually “fixed”; fields and actions can become unreachable at short viewports or 200% zoom.
+
+**Fix:** Scope the bounded flex/min-height chain to the table panel or table-specific wrapper. Preserve the long form's natural height and document scrolling, or its existing canonical application content scroller. Keep only the form action bar sticky when appropriate. Do not change a shared ancestor's height/overflow solely to satisfy the table.
+
+**Verification:** Switch between table and form tabs at short and tall viewport heights and at 200% zoom. Confirm the table frame keeps one footprint for 10/20/50 rows and scrolls internally, while the form's own height grows with its fields, every field remains reachable, and no nested or competing vertical scrollbars appear.
+
+---
+
 ## Verification checklist
 
 Before finalising any diff that touches UI code, grep for at least:
@@ -398,6 +438,15 @@ rg 'if.*role.*NotFound' src/; rg 'redirect.*403' src/
 
 # Native select where popup geometry is authored (review each match in context)
 rg '<select|select\s+option|appearance:\s*none' src/
+
+# Native date input where the calendar locale/geometry is authored (review each match in context)
+rg 'type=.date.|input\[type=.date.\]' src/
+
+# Scrollbar base that depends on an opt-in utility (review against every overflow region)
+rg '\.(custom-scrollbar|ui-scroll-container).*scrollbar|overflow-(x|y|auto)' src/
+
+# Table sizing leaked to a shared page/tab shell (review each match and its siblings)
+rg 'h-dvh|h-screen|100vh|overflow-hidden|min-h-0' src/
 ```
 
 At least the first two searches must return zero results for non-trivial UI changes.

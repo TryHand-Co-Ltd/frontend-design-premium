@@ -4,6 +4,23 @@ All notable changes to this skill are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).
 
+## 1.4.0 - 2026-08-10
+
+### Added
+
+- An explicit native-versus-authored date-picker ownership contract covering locale, labels, storage/display separation, accessibility, collision behavior, and real-browser verification.
+- Japanese calendar checks for complete `ja-JP` UI, Gregorian-by-default behavior, and fallback-English detection.
+- Eval case #40 and a deliberately broken native date-input fixture reproducing an English popup on a Japanese form.
+- A global scrollbar baseline contract and eval #41, preventing new overflow regions from falling back to browser defaults when an opt-in class is omitted.
+- A per-panel scroll-ownership contract and eval #42, preventing viewport-sized table rules from fixing or clipping sibling long forms.
+
+### Changed
+
+- Forms guidance, anti-pattern searches, and the verification checklist now treat an opened calendar as a browser-visible state that must be inspected, not inferred from `lang`, closed-field formatting, or source attributes.
+- Scrollbar guidance now requires application-global tokenized thumb/track/hover/active styling, with per-container classes limited to geometry exceptions and forced-colors behavior preserved.
+- Table viewport sizing now ends at a table-specific panel or wrapper; shared page/tab ancestors and sibling forms retain their established height and scrolling model.
+- Version bumped from 1.3.0 to 1.4.0.
+
 ## 1.3.0 - 2026-08-04
 
 ### Added

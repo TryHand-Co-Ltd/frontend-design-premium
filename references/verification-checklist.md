@@ -64,6 +64,9 @@ Use this before finishing every implementation or review. Mark non-applicable it
 - [ ] Delete/filter changes cannot leave an invalid empty page.
 - [ ] Narrow-screen overflow or alternate representation is usable and visible.
 - [ ] Selection distinguishes page from all-results scope; bulk actions report exact scope and partial failures.
+- [ ] Scroll ownership is explicit per active panel: a viewport-bounded table scrolls internally without imposing its height/overflow contract on a sibling form panel or shared shell.
+- [ ] In mixed table/form tabs, switching to the form restores natural-height/document scrolling or the established application content scroller; no table-owned `100vh`/`h-dvh`/fixed-height/`overflow: hidden` constraint clips the form.
+- [ ] Table page sizes such as 10/20/50 keep the same table frame footprint, while the full long form remains reachable at short/tall viewports and 200% zoom without competing vertical scroll owners.
 
 ## Forms and advanced inputs
 
@@ -71,6 +74,9 @@ Use this before finishing every implementation or review. Mark non-applicable it
 - [ ] Every single-select makes the native or authored popup decision explicit; native is used only when platform-owned popup geometry is acceptable.
 - [ ] For an authored Select/Listbox, the open popup matches the trigger's outer width within 1 CSS px, aligns to it, and shares border-width/color, radius-family, and density tokens.
 - [ ] The open popup was verified in a real browser for keyboard/focus/selection, long options, narrow viewports, 200% zoom, viewport-edge collision, bounded height, and scrolling.
+- [ ] Every date picker makes the native or authored decision explicit; native is used only when browser/OS-owned locale, labels, geometry, and behavior are acceptable on supported platforms.
+- [ ] An authored calendar loads the complete active locale and localizes month/year, weekdays, navigation, today/clear/apply/cancel actions, placeholders, validation, and accessible names without fallback English.
+- [ ] The open calendar was verified in a real browser for keyboard and pointer selection, Escape, trigger focus restoration, locale copy, 200% zoom, narrow/short viewports, collision, bounded height, and scrolling.
 - [ ] App validation shows text errors, correction guidance, field association, and first-error focus.
 - [ ] Duplicate submits are blocked without changing button dimensions.
 - [ ] Textareas have `resize: none` plus adequate/autogrowing space.
@@ -146,6 +152,8 @@ Use this before finishing every implementation or review. Mark non-applicable it
 ## Stability, visual, and component QA
 
 - [ ] Scrollbars are tokenized, visible/usable, and layout-stable.
+- [ ] The application stylesheet provides a global scrollbar baseline; a new scroll container receives thumb/track/hover/active styling without an opt-in class.
+- [ ] Computed `scrollbar-color` on the application root is not the browser default in normal color mode, while forced-colors/high-contrast behavior remains system-operable.
 - [ ] Images, skeletons, errors/help, spinners, fonts, and async content reserve compatible geometry.
 - [ ] No control moves between idle/loading/success/error states.
 - [ ] Narrow viewport, zoom/reflow, reduced motion, empty, slow, and error states were inspected.

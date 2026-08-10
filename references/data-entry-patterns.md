@@ -56,12 +56,20 @@ Use a maintained combobox primitive that follows the WAI-ARIA pattern.
 
 ## Date and date-range pickers
 
+Make the native-versus-authored date-picker decision explicit before choosing the component. Decide whether the calendar popup may remain platform-owned:
+
+- Use native `input[type="date"]` only when the browser/operating-system calendar's language, labels, format presentation, geometry, and behavior are acceptable across the supported browser/OS matrix. Setting `lang`, formatting the closed value, or styling the input does not guarantee the open popup UI.
+- When the active locale, calendar labels, footer actions, geometry, or interaction must be authored and consistent, use the project's maintained accessible date-picker primitive. Load its complete locale pack and do not hand-build calendar ARIA behavior.
+- Treat date-only storage, display formatting, popup localization, and timezone as separate contracts. A localized display value is not a storage value, and locale does not choose a business timezone.
+
 - Distinguish date-only values, local date-time, and absolute instants in the data model.
 - Provide a typed input path in addition to the calendar when practical, with localized format guidance and deterministic parsing.
 - Date ranges define inclusive/exclusive semantics, valid order, min/max, unavailable dates, and timezone before implementation.
 - Presets such as Today, This week, Last 7 days, or Custom must follow domain definitions, not labels alone.
 - Separate draft selection from committed filters when an Apply button exists; Cancel restores the prior committed range and Clear has an explicit outcome.
-- Calendar keyboard behavior, focus, today, selected, range start/end, disabled dates, month navigation, and announcements must remain distinct.
+- Calendar keyboard behavior, focus, today, selected, range start/end, disabled dates, month navigation, announcements, Escape close, and trigger focus restoration must remain distinct.
+- Localize heading, month/year, weekday headers, navigation controls, today/clear/apply/cancel actions, placeholders, validation, and accessible names. Verify there is no fallback English from the component library or browser.
+- Open the popup in a real browser and verify keyboard and pointer selection, focus restoration, locale copy, 200% zoom, narrow/short viewports, collision handling, bounded height, and scrolling. Source attributes and closed-input screenshots do not prove the open calendar.
 - Japanese locale does not imply era notation. Follow `references/japanese-localization.md`.
 
 ## Inline editing

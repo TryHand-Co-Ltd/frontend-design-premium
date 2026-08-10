@@ -61,6 +61,17 @@ Requirements:
 - Load-more preserves current items and appends once; guard double activation.
 - Infinite scroll needs an accessible/manual alternative, loading announcement, state restoration, and virtualization for large DOMs.
 
+### Viewport-sized table regions and scroll ownership
+
+Treat “make the table sync with the screen” as a table-surface requirement, not a page-shell rewrite.
+
+- Name one vertical scroll owner for each active layout mode. A bounded table panel may own an internal `overflow: auto` region; a sibling long form normally keeps natural block height and document scrolling.
+- End the table's `display: flex` / `min-height: 0` chain at the table panel or a table-specific wrapper. Do not add `100vh`, `h-dvh`, fixed height, or `overflow: hidden` to a shared page, shared tab shell, or route ancestor solely to size the table.
+- If the application already has a canonical viewport shell and content scroller, preserve it. Let the form content remain natural-height inside that established scroller; do not create a second nested form scroller.
+- Keep table toolbar and pagination in the table frame while the row viewport scrolls. Changing page size may change scroll height, never the frame footprint.
+- On tab switches, reset panel-specific height and overflow rules. An inactive table panel must not leave clipping or fixed-height constraints on the active form panel.
+- At short viewports and 200% zoom, every form field, validation message, and action must remain reachable. Sticky form actions may remain sticky, but they do not make the form body fixed.
+
 ### Row states and actions
 
 - Keep row height stable during loading and inline actions.
@@ -149,6 +160,7 @@ Set `resize: none`. Provide enough rows and either auto-grow within a sensible c
 - The sticky bar should have a background to avoid content transparency. Do not use `pointer-events: none` or overlay traps.
 - For mobile, keep the bar attached to the bottom of the form (not the viewport) so it does not cover content when the keyboard is open. Detect `visualViewport` height changes to toggle between sticky and static.
 - On validation error, scroll to the first invalid field — the sticky bar remains visible.
+- Keep the form body in natural flow. Scope any bounded scrolling to the application's established content scroller; never inherit the table panel's fixed-height or `overflow: hidden` contract.
 
 ### Unsaved changes guard
 
@@ -260,8 +272,10 @@ Keep the component footprint stable when moving among these states.
 
 ## Scroll containers
 
-- Style only scrollbars the product owns, not every browser surface indiscriminately.
-- Define tokenized thumb/track, hover/active, and dark/light/high-contrast behavior.
+- Establish the product's global scrollbar baseline once in the application stylesheet. Every new scroll container in that application document receives the theme without a per-container opt-in class.
+- Scope the global baseline to surfaces the product owns. Do not attempt to style browser chrome, cross-origin frames, or embedded third-party documents.
+- Define tokenized thumb/track, hover/active, and dark/light/high-contrast/forced-colors behavior. In forced colors, allow the platform to preserve system contrast when required.
+- Use a component-level scrollbar class only for a documented geometry or semantic exception such as stable gutter, compact density, or an intentionally distinct surface—not to activate the base colors.
 - Keep enough width and contrast to perceive and operate; never set `scrollbar-width: none` for scrollable content without an equivalent visible control.
 - Use `scrollbar-color`/`scrollbar-width` and compatible `::-webkit-scrollbar*` styling as required by browser support.
 - Use `scrollbar-gutter: stable` for classic-scrollbar layout stability.

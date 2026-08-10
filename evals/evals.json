@@ -304,6 +304,30 @@
       "files": ["fixtures/native-select-popup-mismatch.tsx"],
       "evidence_required": ["automated-interaction-test", "browser-workflow", "browser-screenshot"],
       "negative_oracle": "Fails if it tries to style native option elements, claims CSS can guarantee the operating-system popup geometry, or checks only the closed trigger."
+    },
+    {
+      "id": 40,
+      "prompt": "Fix this Japanese order-date field. The closed field is on a Japanese page, but opening it shows August, English weekday abbreviations, Clear, and Today. Keep Gregorian dates, display YYYY/MM/DD, store an ISO date-only value, and make the open calendar consistently Japanese.",
+      "expected_output": "Explicitly decides between a native and authored date picker. Because the open calendar language is a product requirement, it replaces the native input with the project's maintained accessible date-picker primitive, loads the complete ja-JP locale pack, keeps Gregorian calendar semantics, separates YYYY/MM/DD display from ISO YYYY-MM-DD storage, localizes heading/weekdays/navigation/today/clear and accessible names, and verifies the open popup in a real browser with keyboard, pointer, Escape, focus restoration, zoom, short-viewport collision, bounded height, and scrolling.",
+      "files": ["fixtures/native-date-picker-english-leak.tsx"],
+      "evidence_required": ["automated-interaction-test", "browser-workflow", "browser-screenshot"],
+      "negative_oracle": "Fails if it keeps native input[type=date] while claiming lang=ja guarantees the popup, checks only the closed value, leaves any owned calendar label in English, conflates YYYY/MM/DD display with ISO storage, or switches to imperial-era dates without a product requirement."
+    },
+    {
+      "id": 41,
+      "prompt": "Fix the scrollbar system in this component library. Existing tables look correct only when developers remember a ui-scroll-container class; this new overflow-x-auto table shows the browser-default gray scrollbar and native arrow buttons. Every product-owned scroll surface must automatically use the project theme.",
+      "expected_output": "Moves the tokenized scrollbar baseline into the application global stylesheet so new scroll containers require no opt-in class. Defines track, thumb, hover, active, width, WebKit-compatible selectors, Firefox scrollbar-color/scrollbar-width, and a forced-colors path. Keeps per-container classes only for explicit gutter/density exceptions, scopes styling to the app document rather than browser chrome or third-party frames, and verifies an unclassed overflow container plus the application root in a real browser using computed styles, screenshots, keyboard scrolling, and high-contrast coverage.",
+      "files": ["fixtures/scrollbar-opt-in-gap.tsx"],
+      "evidence_required": ["automated-browser-test", "browser-workflow", "browser-screenshot", "high-contrast-test"],
+      "negative_oracle": "Fails if it merely adds the existing scrollbar class to this component, requires future overflow containers to opt in, hides the scrollbar, hardcodes colors outside the token system, or claims a source selector proves rendered behavior without testing an unclassed scroll surface."
+    },
+    {
+      "id": 42,
+      "prompt": "A Vue admin page has two tabs: a 50-column, 50,000-record table and a 20-field order form. Make only the table fill the remaining viewport and scroll internally without changing its footprint. The long form must remain naturally scrollable and fully reachable.",
+      "expected_output": "Assigns scroll ownership per tab panel instead of applying table sizing to the shared page shell. The table panel uses a bounded flex chain with min-height: 0 and an internal overflow region; pagination remains inside the table frame. The form panel keeps natural block height and document or content-area scrolling, with only the action bar optionally sticky. Switching tabs does not leave h-dvh, fixed height, or overflow:hidden clipping on the form. Verifies both tabs at short and tall viewports, 200% zoom, and with 10/20/50 table page sizes.",
+      "files": ["fixtures/shared-table-form-fixed-shell.vue"],
+      "evidence_required": ["automated-layout-test", "browser-workflow", "browser-screenshot"],
+      "negative_oracle": "Fails if h-dvh, fixed height, or overflow:hidden is applied to a shared ancestor merely to size the table; if the form body becomes internally fixed or clipped; if only the active table tab is verified; or if table and form are forced to share one scroll owner."
     }
   ]
 }
