@@ -72,9 +72,12 @@ Use this before finishing every implementation or review. Mark non-applicable it
 
 - [ ] Native browser validation bubbles are disabled with `novalidate`/`noValidate`; no `reportValidity()` UX.
 - [ ] Every single-select makes the native or authored popup decision explicit; native is used only when platform-owned popup geometry is acceptable.
+- [ ] Native-select audits include CSS `appearance: none` and utility classes such as `appearance-none`; removing native chrome is not treated as evidence that the opened platform popup is authored.
+- [ ] Every `<datalist>`/`input[list]` makes the native or authored decision explicit; authored combobox requirements use the project's maintained accessible Combobox/Autocomplete primitive instead of a browser-owned datalist popup.
 - [ ] For an authored Select/Listbox, the open popup matches the trigger's outer width within 1 CSS px, aligns to it, and shares border-width/color, radius-family, and density tokens.
 - [ ] The open popup was verified in a real browser for keyboard/focus/selection, long options, narrow viewports, 200% zoom, viewport-edge collision, bounded height, and scrolling.
 - [ ] Every date picker makes the native or authored decision explicit; native is used only when browser/OS-owned locale, labels, geometry, and behavior are acceptable on supported platforms.
+- [ ] The same ownership decision and locale verification covers native `time`, `month`, `week`, and `datetime-local` pickers rather than auditing only `date`.
 - [ ] An authored calendar loads the complete active locale and localizes month/year, weekdays, navigation, today/clear/apply/cancel actions, placeholders, validation, and accessible names without fallback English.
 - [ ] The open calendar was verified in a real browser for keyboard and pointer selection, Escape, trigger focus restoration, locale copy, 200% zoom, narrow/short viewports, collision, bounded height, and scrolling.
 - [ ] App validation shows text errors, correction guidance, field association, and first-error focus.
@@ -153,6 +156,7 @@ Use this before finishing every implementation or review. Mark non-applicable it
 
 - [ ] Scrollbars are tokenized, visible/usable, and layout-stable.
 - [ ] The application stylesheet provides a global scrollbar baseline; a new scroll container receives thumb/track/hover/active styling without an opt-in class.
+- [ ] WebKit scrollbar pseudo-elements are treated as engine fallbacks, not the complete contract; standards-based `scrollbar-color` and `scrollbar-width` cover Firefox where supported.
 - [ ] Computed `scrollbar-color` on the application root is not the browser default in normal color mode, while forced-colors/high-contrast behavior remains system-operable.
 - [ ] Images, skeletons, errors/help, spinners, fonts, and async content reserve compatible geometry.
 - [ ] No control moves between idle/loading/success/error states.

@@ -328,6 +328,46 @@
       "files": ["fixtures/shared-table-form-fixed-shell.vue"],
       "evidence_required": ["automated-layout-test", "browser-workflow", "browser-screenshot"],
       "negative_oracle": "Fails if h-dvh, fixed height, or overflow:hidden is applied to a shared ancestor merely to size the table; if the form body becomes internally fixed or clipped; if only the active table tab is verified; or if table and form are forced to share one scroll owner."
+    },
+    {
+      "id": 43,
+      "prompt": "Replace this Japanese customer autocomplete. It uses input[list] and datalist, but the product requires an authored popup width, border, localized empty/loading states, and consistent keyboard behavior across supported browsers.",
+      "expected_output": "Recognizes datalist as a browser-owned popup and replaces it with the project's maintained accessible Combobox/Autocomplete primitive. Preserves Japanese labels and form integration, uses IME-safe filtering, matches authored popup geometry, supports Arrow keys, Enter, Escape, focus restoration, empty/loading/error/disabled states, bounded scrolling, zoom, and viewport collision, and verifies the open popup in supported browsers.",
+      "files": ["fixtures/native-datalist-combobox-gap.tsx"],
+      "evidence_required": ["automated-interaction-test", "browser-workflow", "browser-screenshot"],
+      "negative_oracle": "Fails if it keeps input[list]/datalist while claiming option CSS controls the opened popup, hand-builds incomplete ARIA behavior, ignores IME composition, or verifies only the closed input."
+    },
+    {
+      "id": 44,
+      "prompt": "Audit this Tailwind-styled Japanese account select. It uses appearance-none and custom trigger borders, but the opened native option popup must match the authored geometry.",
+      "expected_output": "Detects appearance-none as native-chrome stripping rather than an authored popup. Makes the native-versus-authored decision explicit, uses the maintained accessible Select/Listbox when popup geometry is required, and verifies trigger/content width, borders, keyboard behavior, scrolling, zoom, and collision in a real browser.",
+      "files": ["fixtures/native-select-appearance-none.tsx"],
+      "evidence_required": ["automated-interaction-test", "browser-workflow", "browser-screenshot"],
+      "negative_oracle": "Fails if the audit searches only for appearance: none, treats appearance-none as sufficient popup styling, or checks only the closed native select."
+    },
+    {
+      "id": 45,
+      "prompt": "Fix Japanese scheduling controls that use native time, month, week, and datetime-local inputs. Their opened pickers show platform-owned English labels, but the product requires consistent Japanese popup UI.",
+      "expected_output": "Applies the native-versus-authored ownership decision to every sibling picker type, not only date. Uses maintained accessible date/time primitives where popup locale is product-owned, preserves typed storage semantics, loads complete ja-JP copy, and verifies visible/accessibility labels, keyboard and pointer interaction, Escape, focus restoration, zoom, and viewport collision.",
+      "files": ["fixtures/native-picker-sibling-locale-gap.tsx"],
+      "evidence_required": ["automated-interaction-test", "browser-workflow", "browser-screenshot"],
+      "negative_oracle": "Fails if it audits only input[type=date], assumes lang=ja controls native time/month/week/datetime-local popups, or changes display text without verifying the opened pickers."
+    },
+    {
+      "id": 46,
+      "prompt": "Fix this global scrollbar theme. Chromium looks branded because the stylesheet defines only ::-webkit-scrollbar rules, while Firefox still shows its browser default scrollbar.",
+      "expected_output": "Treats WebKit pseudo-elements as engine fallbacks and adds tokenized standards-based scrollbar-color and scrollbar-width to the global application baseline. Preserves thumb, track, hover, active, forced-colors behavior and verifies unclassed scroll surfaces in Chromium and Firefox.",
+      "files": ["fixtures/webkit-only-scrollbar-gap.css"],
+      "evidence_required": ["automated-browser-test", "browser-workflow", "browser-screenshot", "high-contrast-test"],
+      "negative_oracle": "Fails if it keeps a WebKit-only scrollbar contract, adds an opt-in class, hides the scrollbar, or claims Chromium evidence proves Firefox coverage."
+    },
+    {
+      "id": 47,
+      "prompt": "Audit a shared Vue tab shell after a table viewport change. The shell uses h-full/min-h-screen and CSS height: 100%, causing the sibling 20-field form to clip even though no h-dvh class is present.",
+      "expected_output": "Detects h-full, min-h-screen, percentage height, and viewport-unit variants as possible table-height leaks. Scopes the bounded flex/min-height chain to the table panel, restores natural-height or canonical application scrolling for the form, and verifies both tabs at short/tall viewports, 200% zoom, and 10/20/50 page sizes.",
+      "files": ["fixtures/shared-shell-height-variants.vue"],
+      "evidence_required": ["automated-layout-test", "browser-workflow", "browser-screenshot"],
+      "negative_oracle": "Fails if it searches only for h-dvh/100vh, leaves h-full/min-h-screen/height:100% on the shared shell, verifies only the table tab, or creates nested form scrolling."
     }
   ]
 }

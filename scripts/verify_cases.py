@@ -247,8 +247,8 @@ def date_picker_contract() -> tuple[bool, list[str]]:
             r"ISO 8601",
         ],
         "references/anti-patterns.md": [
-            r"Native date input used when localized calendar UI is required",
-            r"type=.date.",
+            r"Native date/time picker used when localized popup UI is required",
+            r"date\|time\|month\|week\|datetime-local",
             r"browser.*owned|operating-system.*owned",
         ],
         "references/verification-checklist.md": [
@@ -374,6 +374,58 @@ def table_form_scroll_ownership_contract() -> tuple[bool, list[str]]:
     return not failures, failures
 
 
+def review_gap_regressions() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "references/anti-patterns.md": [
+            r"appearance-none",
+            r"Native datalist used as an authored combobox",
+            r"date\|time\|month\|week\|datetime-local",
+            r"::-webkit-scrollbar.*scrollbar-color.*scrollbar-width",
+            r"h-full.*min-h-screen.*100dvh.*100svh.*height:\s*100%",
+        ],
+        "references/verification-checklist.md": [
+            r"appearance-none",
+            r"datalist.*input\[list\]|input\[list\].*datalist",
+            r"time.*month.*week.*datetime-local",
+            r"WebKit.*scrollbar-color.*scrollbar-width",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    cases = {item.get("id"): item for item in data.get("evals", [])}
+    fixture_smells = {
+        43: ("native-datalist-combobox-gap.tsx", ["<datalist", 'list="customers"']),
+        44: ("native-select-appearance-none.tsx", ["appearance-none", "<select"]),
+        45: (
+            "native-picker-sibling-locale-gap.tsx",
+            ['type="time"', 'type="month"', 'type="week"', 'type="datetime-local"'],
+        ),
+        46: ("webkit-only-scrollbar-gap.css", ["::-webkit-scrollbar", "::-webkit-scrollbar-thumb"]),
+        47: ("shared-shell-height-variants.vue", ["h-full", "min-h-screen", "height: 100%", "<form"]),
+    }
+    for case_id, (fixture_name, smells) in fixture_smells.items():
+        case = cases.get(case_id)
+        if case is None:
+            failures.append(f"missing eval #{case_id}")
+            continue
+        fixture = ROOT / "evals" / "fixtures" / fixture_name
+        if not fixture.is_file():
+            failures.append(f"eval #{case_id} fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if not all(smell in fixture_text for smell in smells):
+                failures.append(f"eval #{case_id} fixture no longer reproduces its review gap")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append(f"eval #{case_id} needs a negative oracle and runtime evidence")
+
+    return not failures, failures
+
+
 def report(name: str, status: bool, failures: list[str] | None = None) -> bool:
     print(f"  {'PASS' if status else 'FAIL'}: {name}")
     for failure in failures or []:
@@ -410,6 +462,10 @@ def main() -> int:
     print("\nTable/form scroll-ownership structural proof")
     status, failures = table_form_scroll_ownership_contract()
     all_ok &= report("Table viewport sizing remains scoped away from forms", status, failures)
+
+    print("\nReview-gap regression proof")
+    status, failures = review_gap_regressions()
+    all_ok &= report("Datalist, utility, picker, engine, and height variants", status, failures)
 
     print(
         "\nBoundary: PASS proves repository wiring only; browser behavior, native-copy "
