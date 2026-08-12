@@ -50,6 +50,12 @@ If the brief mixes both (landing + admin), treat each route group by its registe
 
 Apply this gate once at the start. Revisit only when the brief pivots between registers.
 
+## 0aa. Canonical UI Resolution Gate
+
+For product/admin work, read `references/canonical-ui-resolution.md` before implementation. Inspect the current stack, locale provider, maintained `DESIGN.md` and `UX-CONTRACT.md`, runtime tokens, shared primitives, and a relevant sibling workflow; then resolve every applicable row in the Canonical UI Map. An unresolved canonical owner or high-risk behavior blocks implementation for that capability.
+
+If an owner exists, reuse or extend it through a business-named variant. Do not add an equivalent screen-local implementation. When no reusable owner exists and the behavior will recur, create one shared primitive and record the decision. Do not rewrite a contract merely to legitimize existing drift.
+
 ## 0b. Japan-market gate
 
 Trigger this gate when the active locale includes Japanese, the product serves people in Japan, the business operates in Japan, or a flow handles Japan-specific identity, address, payment, commerce, public-service, or legal data. Read `references/japan-market-context.md` and classify three independent concerns: **Japanese locale**, **Japan market**, and **Japanese content/visual design**.
@@ -254,6 +260,7 @@ Read references only when relevant. References are grouped into **core** (always
 
 ### Core (always relevant for product/admin apps)
 
+- `references/canonical-ui-resolution.md` — mandatory pre-implementation ownership/reuse gate, project manifest, and audit contract.
 - `references/anti-patterns.md` — grep-able violations to search during verification.
 - `references/design-context-lifecycle.md` — DESIGN.md scan/seed/reconcile/lint/diff behavior.
 - `references/token-mapping.md` — DESIGN.md-to-CSS/Tailwind/theme ownership, adapters, exports, drift gates.
@@ -288,13 +295,14 @@ Always read and run through `references/verification-checklist.md` before declar
 
 At minimum:
 
-1. Confirm `DESIGN.md` was read or appropriately created/reconciled; lint it after changes, verify the documented runtime token mapping, and inspect drift against generated/adapted tokens and shared components.
-2. Run the repository's formatter, typecheck, tests, and build that cover the change.
-3. Exercise the changed workflow in a real browser when available, including success, failure, loading, empty/no-results, keyboard, one narrow viewport, and the open state of any select/listbox popup.
-4. Compare the result with at least one sibling screen for visual language, navigation, feedback, labels, and state behavior.
-5. Exercise applicable offline, stale/conflict, session, locale/theme, long-content, and reduced-motion states rather than testing only the happy path.
-6. Search changed code for the grep-able violations catalogued in `references/anti-patterns.md` — native dialogs, uncancelled search races, non-semantic click targets, missing states, screen-local duplicates, and other common issues. Every match is a bug; fix all of them.
-7. Add or update component-state stories, interaction/accessibility tests, and visual regression coverage when the repository supports them.
-8. Fix failures and repeat verification.
+1. Run `python <this-skill-dir>/scripts/audit_project.py <project-root> --mode strict`, fix blocking findings, and keep its JSON output as static evidence. The audit never substitutes for project-owned runtime checks.
+2. Confirm `DESIGN.md` was read or appropriately created/reconciled; lint it after changes, verify the documented runtime token mapping, and inspect drift against generated/adapted tokens and shared components.
+3. Run the repository's formatter, typecheck, tests, build, and every command configured in `premium-ui.json`; report actual results rather than inferring them from static inspection.
+4. Exercise the changed workflow in a real browser when available, including success, failure, loading, empty/no-results, keyboard, one narrow viewport, and the open state of any select/listbox popup.
+5. Compare the result with at least one sibling screen for visual language, navigation, feedback, labels, and state behavior.
+6. Exercise applicable offline, stale/conflict, session, locale/theme, long-content, and reduced-motion states rather than testing only the happy path.
+7. Search changed code for the grep-able violations catalogued in `references/anti-patterns.md` — native dialogs, uncancelled search races, non-semantic click targets, missing states, screen-local duplicates, and other common issues. Every match is a bug; fix all of them.
+8. Add or update component-state stories, interaction/accessibility tests, and visual regression coverage when the repository supports them.
+9. Fix failures and repeat verification.
 
 Report only: what changed, any business decision made, verification run, and unresolved risk. Keep the narration short; a minimal implementation request should still produce a production-ready result.

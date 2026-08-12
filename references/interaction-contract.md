@@ -2,6 +2,19 @@
 
 Use the sections relevant to the components being changed. This reference expands the foundational invariants in `SKILL.md`; project conventions may refine visuals but should not weaken behavior. For composite/advanced controls also read `data-entry-patterns.md`; for navigation/responsive shells read `navigation-layout.md`; for offline, optimistic, session, conflict, and system feedback read `async-resilience.md`.
 
+## Canonical capability ownership
+
+Resolve the owner for every applicable capability before implementation; see `canonical-ui-resolution.md`. A screen must consume the shared owner or a business-named variant, not recreate equivalent behavior locally.
+
+- **Table Selection:** define select-page versus select-all-results scope, selected count, filter/sort/pagination effects, keyboard operation, bulk-action availability, mutation confirmation, and post-action focus. Never change scope silently.
+- **Select/Listbox:** record native or authored ownership. Native is valid only when platform-owned popup geometry and behavior are accepted; otherwise reuse an accessible authored shared primitive.
+- **Date:** record typed, native, or authored ownership. Default Japanese policy is `ja-JP` with Gregorian display unless requirements say otherwise; store date-only values without timezone conversion. Authored pickers own keyboard, focus restoration, bounded scrolling, and viewport collision.
+- **Form:** standardize `noValidate`, validation timing, inline association, API field errors, form-level recovery, first-invalid focus, duplicate-submit prevention, unsaved changes, and preservation of non-sensitive values.
+- **Scrollbar:** apply tokenized standards properties and engine fallbacks globally to product-owned scroll surfaces. Classes express geometry/semantic exceptions, never activate the base theme.
+- **Toast:** use one localized live-region provider with deduplication, stable placement, semantic tone, and action-aligned vocabulary. Never expose raw backend errors or replace actionable inline errors.
+- **CRUD:** make the UX contract authoritative for navigation, list-state restoration, pending state, feedback, confirmation strength, failure recovery, and focus outcome.
+- **Async resilience:** cancel/invalidate stale list work, prevent older requests from clearing newer pending state, block duplicate mutations, preserve form/dialog context on failure, expose retry, and keep destructive dialogs open until server confirmation.
+
 ## Interactive controls
 
 For every control verify:

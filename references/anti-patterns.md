@@ -2,6 +2,17 @@
 
 Read this during **verification** (`references/verification-checklist.md` step 6). Before declaring done, search the changed code for each anti-pattern below. Fix every match; none are optional.
 
+## Canonical ownership and project-audit violations
+
+- A screen-local select, date field, validation adapter, toast viewport, scrollbar theme, or CRUD transition duplicates a maintained shared owner.
+- `select` or `input[type="date"]` appears without an explicit native/typed/authored ownership decision.
+- Base scrollbar styling exists only under `.custom-scrollbar`, `.scrollbar`, or another opt-in class, or uses only `::-webkit-scrollbar*` without `scrollbar-color`/`scrollbar-width`.
+- A shared page/form shell receives `h-screen`, `h-dvh`, `100vh`, `100dvh`, or `overflow: hidden` solely to make a table fit.
+- Product forms omit `novalidate`/`noValidate`, or validation/recovery differs by screen without a named variant.
+- Literal `href="#"` links or enabled buttons without a real action create false affordances.
+- CRUD redirects, loading, toast, confirmation, focus, or failure recovery drift from `UX-CONTRACT.md`.
+- Completion is claimed from static grep/audit while configured accessibility, localization, state-matrix, CRUD, or failure-path commands were not run.
+
 ## How to use
 
 Each entry lists:
