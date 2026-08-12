@@ -2,7 +2,7 @@
   "schema_version": 1,
   "skill": {
     "name": "frontend-design-premium",
-    "version": "1.4.0"
+    "version": "1.5.0"
   },
   "upstream": {
     "repository": "anthropics/skills",

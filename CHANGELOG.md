@@ -4,6 +4,14 @@ All notable changes to this skill are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).
 
+## 1.5.0 - 2026-08-12
+
+### Added
+
+- A mandatory Canonical UI Resolution and Reuse Gate for product/admin work.
+- The zero-dependency `audit_project.py` verifier with stable JSON findings and strict/report modes.
+- Ownership contracts and verification coverage for selection, select/listbox, date, form, scrollbar, toast, CRUD, and async resilience.
+
 ## 1.4.0 - 2026-08-10
 
 ### Added

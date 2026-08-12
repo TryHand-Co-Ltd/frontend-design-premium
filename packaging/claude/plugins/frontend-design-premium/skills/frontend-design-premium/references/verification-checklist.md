@@ -2,6 +2,20 @@
 
 Use this before finishing every implementation or review. Mark non-applicable items mentally; do not dump the checklist into the user response.
 
+## Mandatory project audit sequence
+
+For product/admin work, complete this sequence before claiming compliance:
+
+1. Run `audit_project.py` in strict mode and resolve contract/static findings.
+2. Check `DESIGN.md`, runtime tokens, canonical owners, and sibling workflows for drift.
+3. Search for false affordances and the grep-able patterns in `anti-patterns.md`.
+4. Run project-owned accessibility and localization checks.
+5. Exercise the browser state matrix: loading, empty/no-results, error, slow/stale, success, keyboard, narrow viewport, locale/theme, and reduced motion as applicable.
+6. Verify complete create/read/update/delete behavior, navigation, list restoration, feedback, confirmation, and focus.
+7. Verify server failure, retry, duplicate prevention, stale requests, and destructive-dialog recovery.
+
+The static auditor does not execute or replace steps 4–7. Record exact commands and results as completion evidence.
+
 ## Dependency, business context, and design context
 
 - [ ] The current installed `frontend-design` skill was loaded completely.
