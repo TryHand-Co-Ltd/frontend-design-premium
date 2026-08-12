@@ -368,6 +368,46 @@
       "files": ["fixtures/shared-shell-height-variants.vue"],
       "evidence_required": ["automated-layout-test", "browser-workflow", "browser-screenshot"],
       "negative_oracle": "Fails if it searches only for h-dvh/100vh, leaves h-full/min-h-screen/height:100% on the shared shell, verifies only the table tab, or creates nested form scrolling."
+    },
+    {
+      "id": 48,
+      "prompt": "Implement a new order filter, but the Canonical UI Map names AppSelect while this screen already contains a local OrderSelect copy with different keyboard behavior. Decide what to do before coding.",
+      "expected_output": "Runs Project UI Resolution, treats the maintained AppSelect owner as authoritative, blocks implementation until any genuine owner conflict is resolved, removes or migrates the local duplicate through a business-named shared variant, and updates contract/runtime/evidence together only for an intentional system decision.",
+      "files": ["fixtures/canonical-owner-drift.vue"],
+      "evidence_required": ["canonical-ui-map", "source-trace", "component-test"],
+      "negative_oracle": "Fails if it selects the local implementation because it already exists, creates another screen-local select, or rewrites UX-CONTRACT.md merely to legitimize drift."
+    },
+    {
+      "id": 49,
+      "prompt": "Audit this product stylesheet. Scrollbars are branded only when a developer opts into a custom-scrollbar class and only Chromium receives the theme.",
+      "expected_output": "Runs the strict project audit, reports scrollbar.opt-in-base and scrollbar.webkit-only, moves base tokenized theming to the global product surface with standards properties and engine fallbacks, and reserves classes for geometry or semantic exceptions.",
+      "files": ["fixtures/scrollbar-opt-in.css"],
+      "evidence_required": ["premium-audit-json", "computed-style-test", "cross-engine-browser-test"],
+      "negative_oracle": "Fails if it adds the opt-in class to more containers, treats WebKit output as cross-engine proof, or hides the scrollbar."
+    },
+    {
+      "id": 50,
+      "prompt": "Review the declared CRUD verification for this order console. Happy paths are listed, but server failure recovery and retry behavior are not owned or evidenced.",
+      "expected_output": "Treats UX-CONTRACT.md as observable CRUD truth, reports missing failure-path evidence without claiming the happy-path note proves runtime behavior, defines preservation/retry/focus outcomes, and requires the configured project-owned E2E command to be run separately.",
+      "files": ["fixtures/crud-failure-gap.md"],
+      "evidence_required": ["premium-audit-json", "failure-path-e2e", "command-result"],
+      "negative_oracle": "Fails if static inspection is presented as full CRUD verification or if the destructive dialog closes before server confirmation."
+    },
+    {
+      "id": 51,
+      "prompt": "The product explicitly accepts operating-system-owned Japanese select and date popups. Audit the screen without replacing valid native controls just for visual uniformity.",
+      "expected_output": "Preserves native controls because ownership is explicit, verifies their supported-platform accessibility and locale behavior through project evidence, and avoids false ownership findings while still enforcing form, CRUD, and runtime contracts.",
+      "files": ["fixtures/native-date-picker-english-leak.tsx", "fixtures/native-select-popup-mismatch.tsx"],
+      "evidence_required": ["ownership-decision", "supported-platform-test"],
+      "negative_oracle": "Fails if native controls are automatically rejected despite explicit accepted ownership, or if acceptance is treated as proof without platform tests."
+    },
+    {
+      "id": 52,
+      "prompt": "Before claiming this admin UI is premium-compliant, run the new project verifier and explain which checks remain project-owned.",
+      "expected_output": "Runs audit_project.py in strict mode, reports stable rule IDs and exit status, then separately runs configured unit/E2E/accessibility/premium commands. It states that static inspection cannot prove keyboard, focus, localization, popup collision, accessibility, CRUD, or failure recovery.",
+      "files": ["fixtures/canonical-owner-drift.vue", "fixtures/crud-failure-gap.md"],
+      "evidence_required": ["premium-audit-json", "command-results", "browser-state-matrix"],
+      "negative_oracle": "Fails if audit_project.py executes arbitrary commands, mutates the project, or is used as the sole proof of runtime compliance."
     }
   ]
 }

@@ -426,6 +426,61 @@ def review_gap_regressions() -> tuple[bool, list[str]]:
     return not failures, failures
 
 
+def canonical_project_audit_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"Canonical UI Resolution Gate",
+            r"audit_project\.py.*--mode strict",
+            r"screen-local implementation",
+        ],
+        "references/canonical-ui-resolution.md": [
+            r"Capability.*Canonical owner.*Source of truth.*Allowed variants.*Verification",
+            r"business/domain/API contract",
+            r"never executes them",
+        ],
+        "assets/UX-CONTRACT.template.md": [
+            r"Table Selection",
+            r"Select/Listbox",
+            r"CRUD full-flow evidence",
+        ],
+        "references/verification-checklist.md": [
+            r"Mandatory project audit sequence",
+            r"failure-path",
+            r"static auditor does not execute",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    cases = {item.get("id"): item for item in data.get("evals", [])}
+    fixtures = {
+        48: ("canonical-owner-drift.vue", ["<select", 'href="#"']),
+        49: ("scrollbar-opt-in.css", [".custom-scrollbar", "::-webkit-scrollbar-thumb"]),
+        50: ("crud-failure-gap.md", ["happy paths", "not specified"]),
+    }
+    for case_id in range(48, 53):
+        case = cases.get(case_id)
+        if case is None:
+            failures.append(f"missing eval #{case_id}")
+            continue
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append(f"eval #{case_id} needs a negative oracle and runtime evidence")
+        if case_id in fixtures:
+            fixture_name, smells = fixtures[case_id]
+            fixture = ROOT / "evals" / "fixtures" / fixture_name
+            if not fixture.is_file():
+                failures.append(f"eval #{case_id} fixture is missing")
+            else:
+                fixture_text = fixture.read_text(encoding="utf-8")
+                if not all(smell in fixture_text for smell in smells):
+                    failures.append(f"eval #{case_id} fixture no longer reproduces its project-audit gap")
+    return not failures, failures
+
+
 def report(name: str, status: bool, failures: list[str] | None = None) -> bool:
     print(f"  {'PASS' if status else 'FAIL'}: {name}")
     for failure in failures or []:
@@ -466,6 +521,10 @@ def main() -> int:
     print("\nReview-gap regression proof")
     status, failures = review_gap_regressions()
     all_ok &= report("Datalist, utility, picker, engine, and height variants", status, failures)
+
+    print("\nCanonical UI project-audit proof")
+    status, failures = canonical_project_audit_contract()
+    all_ok &= report("Resolution, reuse, static audit, and runtime boundary", status, failures)
 
     print(
         "\nBoundary: PASS proves repository wiring only; browser behavior, native-copy "
