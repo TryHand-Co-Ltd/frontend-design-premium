@@ -433,6 +433,8 @@ def canonical_project_audit_contract() -> tuple[bool, list[str]]:
             r"Canonical UI Resolution Gate",
             r"audit_project\.py.*--mode strict",
             r"screen-local implementation",
+            r"loading indicator/spinner by default",
+            r"Persist committed search.*page size in URL",
         ],
         "references/canonical-ui-resolution.md": [
             r"Capability.*Canonical owner.*Source of truth.*Allowed variants.*Verification",
@@ -448,6 +450,13 @@ def canonical_project_audit_contract() -> tuple[bool, list[str]]:
             r"Mandatory project audit sequence",
             r"failure-path",
             r"static auditor does not execute",
+            r"Required accessibility baseline",
+            r"Recommended extended verification",
+        ],
+        "references/interaction-contract.md": [
+            r"aria-invalid=.true.",
+            r"visual viewport and safe-area bounds",
+            r"Skeletons are optional",
         ],
     }
     for relative, patterns in required.items():
@@ -461,8 +470,11 @@ def canonical_project_audit_contract() -> tuple[bool, list[str]]:
         48: ("canonical-owner-drift.vue", ["<select", 'href="#"']),
         49: ("scrollbar-opt-in.css", [".custom-scrollbar", "::-webkit-scrollbar-thumb"]),
         50: ("crud-failure-gap.md", ["happy paths", "not specified"]),
+        53: ("default-loading-spinner.vue", ["AppSpinner", "min-h-80"]),
+        55: ("textarea-resize-and-label-gap.vue", ["<textarea", 'aria-invalid="true"']),
+        56: ("responsive-dialog-gap.vue", ["h-[900px]", 'role="dialog"']),
     }
-    for case_id in range(48, 53):
+    for case_id in range(48, 58):
         case = cases.get(case_id)
         if case is None:
             failures.append(f"missing eval #{case_id}")

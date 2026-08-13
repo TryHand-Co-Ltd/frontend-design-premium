@@ -84,7 +84,7 @@ components:
 
 ### Foundational visual states
 
-[Document default, hover, focus-visible, active/pressed, selected, disabled, read-only, busy, success, warning, error, and skeleton treatment for shared primitives.]
+[Document default, hover, focus-visible, active/pressed, selected, disabled, read-only, busy, success, warning, error, the default app-owned loading indicator, and optional skeleton treatment when selected.]
 
 ### Buttons and actions
 

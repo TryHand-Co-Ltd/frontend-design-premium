@@ -9,6 +9,9 @@ Read this during **verification** (`references/verification-checklist.md` step 6
 - Base scrollbar styling exists only under `.custom-scrollbar`, `.scrollbar`, or another opt-in class, or uses only `::-webkit-scrollbar*` without `scrollbar-color`/`scrollbar-width`.
 - A shared page/form shell receives `h-screen`, `h-dvh`, `100vh`, `100dvh`, or `overflow: hidden` solely to make a table fit.
 - Product forms omit `novalidate`/`noValidate`, or validation/recovery differs by screen without a named variant.
+- Literal product textareas omit `resize-none`/`resize: none`, lack adequate height/auto-grow, or bypass the canonical Textarea owner.
+- Invalid native fields lack a working visible label, `aria-invalid`, or an existing help/error target referenced by `aria-describedby`.
+- Modal edit/delete surfaces use fixed dimensions that overflow the visual viewport/safe area or make their actions unreachable.
 - Literal `href="#"` links or enabled buttons without a real action create false affordances.
 - CRUD redirects, loading, toast, confirmation, focus, or failure recovery drift from `UX-CONTRACT.md`.
 - Completion is claimed from static grep/audit while configured accessibility, localization, state-matrix, CRUD, or failure-path commands were not run.

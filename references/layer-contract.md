@@ -40,6 +40,7 @@ Toast         900–999          Toast/sonner notifications (always top)
 - **Focus trap:** When the dialog opens, focus moves to the first focusable element or the dialog itself. Tab/Shift+Tab cycles within the dialog. On close, focus returns to the trigger element.
 - **Escape:** Closes the dialog. On destructive dialogs, Escape is equivalent to Cancel (not Confirm).
 - **Inert background:** Use `aria-hidden` or [`inert`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/inert) on the background content while the dialog is open to prevent accidental interaction.
+- **Responsive bounds:** Keep the surface within the visual viewport and safe-area insets. Long content scrolls inside the body while the title and actions remain reachable; the virtual keyboard must not cover the active field or required action.
 
 ```tsx
 // Dialog z-index via CSS variable
@@ -59,12 +60,13 @@ Toast         900–999          Toast/sonner notifications (always top)
 
 ## Drawer / Sheet behavior
 
+- **Ownership:** Declare the drawer modal or non-modal. Modal drawers use a backdrop, inert background, focus trap, Escape, and focus restoration. Persistent/non-modal drawers omit modal semantics and follow a documented canonical focus/navigation variant.
 - **Slide direction:** From the right for details/operations; from the left for navigation on mobile.
 - **Width:** 400px–480px as a content standard; full-width on mobile (< 768px).
 - **Stacking:** Drawer sits at `z-index: var(--z-sheet)`, below dialog but above popover. If a dialog opens from within a drawer, the dialog appears above the drawer.
-- **Backdrop:** Same as dialog's backdrop — clicking closes the drawer.
-- **Escape:** Closes the drawer.
-- **Focus trap:** Same as dialog — focus is trapped inside the drawer while open. On close, return focus to the trigger.
+- **Backdrop:** Required for modal drawers; optional/absent for a documented persistent non-modal drawer.
+- **Escape:** Closes a dismissible drawer; a persistent variant documents its close/navigation affordance.
+- **Focus:** Modal drawers trap focus and restore it on close. Non-modal drawers preserve normal document focus order unless their canonical contract defines another accessible model.
 
 ## Toast / Notification behavior
 

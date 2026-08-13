@@ -4,12 +4,12 @@ description: Production UX and durable design-context layer that must be used to
 metadata:
   compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
   author: frontend-design-premium contributors
-  version: "1.5.0"
+  version: "1.4.0"
   upstream-skill: frontend-design
   upstream-tested:
     revision: "2026-02 — initial compatibility"
     digest: "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
-    tested-with-premium: "1.5.0"
+    tested-with-premium: "1.4.0"
   compatibility-policy:
     strict-on-release: true
     warn-on-untested: true
@@ -149,6 +149,7 @@ When no high-risk category is affected and the user says "just do it" or provide
 - Successful edit: follow the canonical sibling edit flow; if none exists, return to the owning list.
 - Destructive or hard-to-reverse action: app-owned confirmation dialog; offer Undo when technically honest.
 - Search request debounce: 300 ms, IME-safe, with stale-request cancellation.
+- Loading treatment: use an app-owned loading indicator/spinner by default; use skeletons only when the prompt, business requirement, or canonical project contract asks for them.
 - Accessibility target: WCAG 2.2 AA.
 
 Read `references/decision-matrix.md` when choosing pagination/load-more/infinite-scroll, save destinations, confirmation strength, or loading treatment.
@@ -168,7 +169,7 @@ Every non-trivial data table needs a deliberate dataset-navigation strategy. Do 
 Assign scroll ownership before applying viewport sizing. A request to make a table fill the remaining screen applies to the table panel or table surface only; it does not authorize `100vh`/`h-dvh`, fixed height, or `overflow: hidden` on a shared page, tab shell, or ancestor merely to make the table fit. When sibling panels contain a long form, preserve that form panel's established natural-height/document-scrolling behavior unless the application already has a canonical content scroller. Bound the table through its own complete flex/min-height chain and keep its overflow internal. Treat each tab panel as an independent layout mode and verify every sibling after switching tabs.
 
 - Prefer native semantic `<table>` for read-oriented tabular data; use an ARIA grid only for genuinely spreadsheet-like keyboard interaction.
-- Keep filtering, sorting, page/cursor, page size, and selection behavior coherent and restorable. Put shareable state in the URL when architecture allows.
+- Keep filtering, sorting, page/cursor, page size, and selection behavior coherent and restorable. Persist committed search, active filters, sort, page, and page size in URL search parameters by default. `UX-CONTRACT.md` may override this for transient, sensitive, non-shareable, or architecture-constrained state.
 - Reset or clamp paging after filter changes and deletion; never strand users on an empty out-of-range page.
 - Provide loading, empty, no-results, partial-error, and total/range states without changing the table's footprint unexpectedly.
 - Make sortable headers real buttons with hover, focus, active, and `aria-sort` behavior.
@@ -188,15 +189,15 @@ Define one global scrollbar baseline in the application stylesheet for every scr
 
 The layout must not jump, reflow unexpectedly, or move controls during loading and feedback:
 
-- reserve image/media, async content, error/help text, scrollbar, and skeleton space;
-- keep skeleton and final content dimensions compatible;
+- reserve compatible geometry for image/media, async content, error/help text, scrollbars, and the chosen loading indicator;
+- keep spinner/loader regions stable; when skeletons are explicitly chosen, match the final content geometry;
 - keep buttons the same size while busy—replace or overlay content instead of widening labels;
 - avoid font swaps and late banners that move primary controls;
 - anchor overlays and popovers without affecting document flow.
 
 ### Dialogs, confirmations, and feedback
 
-Never call browser `alert()`, `confirm()`, or `prompt()` for product UI. Use app-owned, accessible dialog/alert-dialog primitives with focus placement, focus trap/inert background, Escape behavior, accessible title/description, and focus restoration.
+Never call browser `alert()`, `confirm()`, or `prompt()` for product UI. Use app-owned, accessible modal dialog/alert-dialog primitives with focus placement, focus trap/inert background, Escape behavior, accessible title/description, and focus restoration. A deliberately non-modal or persistent drawer may use a documented canonical variant without focus trapping; it must not be presented as modal.
 
 Confirm destructive, irreversible, privacy-sensitive, permission-changing, bulk, or costly actions. Name the object and consequence; label the action with the real verb (`Delete`, not `OK`). Initially focus the least destructive action when consequences are serious. Require typed confirmation only for rare, high-impact irreversible operations. Do not create confirmation fatigue for routine reversible saves.
 
@@ -224,7 +225,7 @@ Do not communicate intent by color alone. Keep icon, label, focus ring, contrast
 - For every single-select dropdown, explicitly choose native or authored behavior. Keep a native `<select>` only when an operating-system-owned popup is acceptable; when popup width, border, radius, spacing, or collision behavior is part of the visual contract, use the project's maintained accessible Select/Listbox primitive and follow `references/data-entry-patterns.md`.
 - For every date picker, explicitly choose native or authored behavior. Keep native `input[type="date"]` only when a browser/operating-system-owned popup—including its locale, labels, geometry, and accessibility behavior—is acceptable on every supported platform. When the product must own calendar language or interaction, use the project's maintained accessible date-picker primitive and follow `references/data-entry-patterns.md`.
 - Keep semantic types and useful constraint metadata where they aid keyboards, autofill, parsing, or app validation; disabling browser UI does not mean discarding semantics.
-- Show errors in text, associate them with fields, preserve entered values, focus/scroll to the first invalid field on submit, and include a correction hint.
+- Show errors in text, associate them with fields, preserve entered values, focus/scroll to the first invalid field on submit, and include a correction hint. Native fields use a real label association; invalid fields expose `aria-invalid="true"` and reference existing help/error content with `aria-describedby`.
 - Prevent duplicate submit. During submit, preserve button dimensions and make busy state perceivable.
 - Set `resize: none` on textareas. Compensate with sufficient default height and auto-grow or an alternate expansion affordance when long input is expected.
 - Password, token, API key, secret, and equivalent inputs are masked by default. Add a keyboard-accessible show/hide button with changing accessible label/state. Use the correct password/autocomplete semantics and never place secrets in URLs, analytics, logs, toast text, or persistent client storage without an explicit security design.
@@ -234,7 +235,7 @@ Do not communicate intent by color alone. Keep icon, label, focus ring, contrast
 
 Every search field has an explicit clear (`X`) button when non-empty. The button is keyboard accessible, has a localized accessible label, clears immediately, cancels pending work, refreshes results correctly, and returns focus to the input.
 
-Debounce remote search (300 ms default), but do not delay local clearing or explicit Enter submission. Do not fire while IME composition is active; run after composition ends. Cancel superseded requests or ignore stale responses so older results cannot overwrite newer ones. Reflect a committed query in route state when users need Back/Forward or shareable results.
+Debounce remote search (300 ms default), but do not delay local clearing or explicit Enter submission. Do not fire while IME composition is active; run after composition ends. Cancel superseded requests or ignore stale responses so older results cannot overwrite newer ones. Persist a committed query in URL state by default together with applicable filters, sort, page, and page size; allow a documented business override for transient, sensitive, non-shareable, or architecture-constrained state.
 
 ### Locale and Japanese products
 
@@ -244,7 +245,7 @@ For Japanese UI, use `ja-JP` and an explicit domain timezone (often `Asia/Tokyo`
 
 ### Accessibility and responsive behavior
 
-Target WCAG 2.2 AA. Preserve native semantics, keyboard operation, visible focus, sufficient contrast, reduced motion, zoom/reflow, screen-reader names/status, and practical touch targets. Focus must not be obscured by sticky UI or virtual keyboards. Every drag interaction needs a non-drag alternative, and authentication must allow password managers and paste. Icon-only controls require accessible names and tooltips when the icon is not universally understood. Test no-hover, keyboard-only, narrow viewport, long text, empty data, slow network, and reduced motion.
+Target WCAG 2.2 AA. The required baseline is native semantics, accessible names/status, visible focus, sufficient contrast, and the standard keyboard behavior of native or authored interactive components. Focus must not be obscured by sticky UI or virtual keyboards. Every drag interaction needs a non-drag alternative, and authentication must allow password managers and paste. Icon-only controls require accessible names and tooltips when the icon is not universally understood. Touch-target measurement, cross-device touch testing, and a full 200% zoom matrix are recommended unless the project accessibility/platform contract makes them mandatory.
 
 ### Advanced and conditional patterns
 

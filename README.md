@@ -51,7 +51,7 @@ python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
   dist/codex-marketplace/plugins/frontend-design-premium
 ```
 
-The generated review archive is written to `dist/frontend-design-premium-codex-1.5.0.zip`.
+The generated review archive is written to `dist/frontend-design-premium-codex-1.4.0.zip`.
 It bundles the tested upstream `frontend-design` snapshot and verifies its recorded digest during every build. See [`packaging/codex/README.md`](packaging/codex/README.md) for local marketplace testing.
 
 #### Claude Code
@@ -122,7 +122,7 @@ Restart the harness if it does not support live skill discovery.
 
 | Command | What it does |
 |---------|-------------|
-| `python scripts/install.py --version` | Print skill version (`v1.5.0`) |
+| `python scripts/install.py --version` | Print skill version (`v1.4.0`) |
 | `python scripts/install.py --check` | Compare source version against each installed target |
 | `python scripts/install.py --list-targets` | Show install status per harness (link type + version) |
 | `python scripts/install.py --target agents` | Install to `.agents/skills/` (default) |

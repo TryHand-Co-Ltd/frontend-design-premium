@@ -247,6 +247,22 @@ def inspect_source(project_root: Path, manifest: dict[str, Any]) -> list[Finding
                 line=line_number(text, match.start()),
             ))
 
+        for match in re.finditer(r"<textarea\b([^>]*)>", text, flags=re.IGNORECASE):
+            attributes = match.group(1)
+            has_resize_none = bool(
+                re.search(r"\bresize-none\b", attributes)
+                or re.search(r"resize\s*:\s*none", attributes, flags=re.IGNORECASE)
+            )
+            if has_resize_none:
+                continue
+            findings.append(finding(
+                "form.textarea-resize-missing",
+                "Literal product textarea does not show evidence of the canonical resize-none rule.",
+                "Use the shared Textarea owner or apply resize-none/resize: none with adequate height or auto-grow behavior.",
+                file=name,
+                line=line_number(text, match.start()),
+            ))
+
         if re.search(r"<select\b", text, flags=re.IGNORECASE) and ownership.get("Select/Listbox") != "native":
             findings.append(finding(
                 "ownership.native-select-undecided",

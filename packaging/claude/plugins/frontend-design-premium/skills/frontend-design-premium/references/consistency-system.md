@@ -53,7 +53,7 @@ Prefer the project's existing equivalents. If missing and repeated, establish on
 - `Toast`/status region;
 - `DataTable`, selection/bulk toolbar, paginator/load-more control, empty/no-results/error states;
 - `Combobox`, date/date-range picker, upload queue, disclosure/accordion, and stepper when repeated;
-- `LoadingSkeleton`, determinate/indeterminate progress, connectivity banner, and retry state;
+- app-owned loading indicator/spinner, optional project-selected skeleton, determinate/indeterminate progress, connectivity banner, and retry state;
 - responsive navigation/sidebar/drawer, breadcrumbs, and tabs;
 - locale provider and formatters;
 - route helpers for list/detail/create/edit transitions;

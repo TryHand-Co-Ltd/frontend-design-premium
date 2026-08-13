@@ -196,6 +196,21 @@ class AuditProjectCliTests(unittest.TestCase):
         completed = self.run_audit(root, "strict", no_write=True, config=root / "config/premium.json")
         self.assertNotIn("config.invalid-json", self.rule_ids(completed))
 
+    def test_textarea_without_resize_none_is_a_contract_violation(self) -> None:
+        files = self.product_files(
+            source='<template><form novalidate><label for="note">備考</label><textarea id="note"></textarea></form></template>'
+        )
+        completed = self.run_audit(self.project(files), "strict", no_write=True)
+        self.assertEqual(completed.returncode, 1)
+        self.assertIn("form.textarea-resize-missing", self.rule_ids(completed))
+
+    def test_textarea_with_canonical_resize_style_passes_resize_audit(self) -> None:
+        files = self.product_files(
+            source='<template><form novalidate><label for="note">備考</label><textarea id="note" class="resize-none"></textarea></form></template>'
+        )
+        completed = self.run_audit(self.project(files), "strict", no_write=True)
+        self.assertNotIn("form.textarea-resize-missing", self.rule_ids(completed))
+
 
 class DocumentationContractTests(unittest.TestCase):
     EXPECTED_COLUMNS = (
@@ -215,6 +230,31 @@ class DocumentationContractTests(unittest.TestCase):
         template = (REPO_ROOT / "assets" / "UX-CONTRACT.template.md").read_text(encoding="utf-8")
         header = "| " + " | ".join(self.EXPECTED_COLUMNS) + " |"
         self.assertIn(header, template)
+
+    def test_loading_contract_defaults_to_spinner_and_makes_skeleton_explicit(self) -> None:
+        matrix = (REPO_ROOT / "references" / "decision-matrix.md").read_text(encoding="utf-8")
+        self.assertIn("App-owned loading indicator/spinner", matrix)
+        self.assertIn("Skeleton is optional", matrix)
+        self.assertIn("prompt, business requirement, or canonical project contract", matrix)
+
+    def test_url_state_is_default_with_documented_business_override(self) -> None:
+        skill = (REPO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Persist committed search, active filters, sort, page, and page size in URL", skill)
+        self.assertIn("transient, sensitive, non-shareable, or architecture-constrained", skill)
+
+    def test_form_and_responsive_dialog_contracts_are_explicit(self) -> None:
+        interaction = (REPO_ROOT / "references" / "interaction-contract.md").read_text(encoding="utf-8")
+        self.assertIn('aria-invalid="true"', interaction)
+        self.assertIn("Clicking a visible label", interaction)
+        self.assertIn("visual viewport and safe-area bounds", interaction)
+        self.assertIn("virtual keyboard", interaction)
+
+    def test_basic_keyboard_is_required_but_extended_mobile_evidence_is_advisory(self) -> None:
+        checklist = (REPO_ROOT / "references" / "verification-checklist.md").read_text(encoding="utf-8")
+        self.assertIn("Required accessibility baseline", checklist)
+        self.assertIn("Recommended extended verification", checklist)
+        self.assertIn("touch-target measurement", checklist)
+        self.assertIn("200% zoom matrix", checklist)
 
 
 if __name__ == "__main__":

@@ -4,18 +4,15 @@ All notable changes to this skill are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).
 
-## 1.5.0 - 2026-08-12
+## 1.4.0 - 2026-08-13
 
 ### Added
 
 - A mandatory Canonical UI Resolution and Reuse Gate for product/admin work.
 - The zero-dependency `audit_project.py` verifier with stable JSON findings and strict/report modes.
 - Ownership contracts and verification coverage for selection, select/listbox, date, form, scrollbar, toast, CRUD, and async resilience.
-
-## 1.4.0 - 2026-08-10
-
-### Added
-
+- Static `form.textarea-resize-missing` findings for literal product textareas that bypass `resize: none`.
+- Explicit label, invalid-state, error-association, first-error-focus, and responsive-dialog review contracts.
 - An explicit native-versus-authored date-picker ownership contract covering locale, labels, storage/display separation, accessibility, collision behavior, and real-browser verification.
 - Japanese calendar checks for complete `ja-JP` UI, Gregorian-by-default behavior, and fallback-English detection.
 - Eval case #40 and a deliberately broken native date-input fixture reproducing an English popup on a Japanese form.
@@ -24,6 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Made stable app-owned loading indicators/spinners the default and skeletons explicit project/prompt opt-ins.
+- Made committed search/filter/sort/page/page-size URL state the default with documented business overrides.
+- Split required keyboard/accessibility behavior from recommended touch, cross-device, and full zoom evidence.
+- Clarified modal versus non-modal drawer ownership and responsive edit/delete dialog behavior.
 - Forms guidance, anti-pattern searches, and the verification checklist now treat an opened calendar as a browser-visible state that must be inspected, not inferred from `lang`, closed-field formatting, or source attributes.
 - Scrollbar guidance now requires application-global tokenized thumb/track/hover/active styling, with per-container classes limited to geometry exceptions and forced-colors behavior preserved.
 - Table viewport sizing now ends at a table-specific panel or wrapper; shared page/tab ancestors and sibling forms retain their established height and scrolling model.

@@ -69,7 +69,7 @@ Complete only applicable rows. An unresolved owner blocks implementation for tha
 
 - Admin tables:
 - Exploratory lists:
-- URL state:
+- URL state (default: committed search, filters, sort, page, and page size; record any transient/sensitive/non-shareable/architecture override):
 - Page size:
 - Empty/no-results/error/loading treatment:
 - Back/scroll restoration:

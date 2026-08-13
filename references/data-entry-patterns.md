@@ -69,7 +69,7 @@ Make the native-versus-authored date-picker decision explicit before choosing th
 - Separate draft selection from committed filters when an Apply button exists; Cancel restores the prior committed range and Clear has an explicit outcome.
 - Calendar keyboard behavior, focus, today, selected, range start/end, disabled dates, month navigation, announcements, Escape close, and trigger focus restoration must remain distinct.
 - Localize heading, month/year, weekday headers, navigation controls, today/clear/apply/cancel actions, placeholders, validation, and accessible names. Verify there is no fallback English from the component library or browser.
-- Open the popup in a real browser and verify keyboard and pointer selection, focus restoration, locale copy, 200% zoom, narrow/short viewports, collision handling, bounded height, and scrolling. Source attributes and closed-input screenshots do not prove the open calendar.
+- Open the popup in a real browser and verify required keyboard behavior, focus restoration, locale copy, narrow/short viewports, collision handling, bounded height, and scrolling. Add pointer/touch and a full 200% zoom matrix when the project requires extended verification. Source attributes and closed-input screenshots do not prove the open calendar.
 - Japanese locale does not imply era notation. Follow `references/japanese-localization.md`.
 
 ## Inline editing
@@ -140,6 +140,7 @@ Prefer a native range input when it meets visual and interaction needs. A custom
 - Use `useSearchParams` (Next.js) or `useSearchParams` (React Router) to read/write filter state.
 - Do not duplicate state: URL is the source of truth. Component state derives from URL.
 - On page load, read initial filter state from URL. If no URL params exist, use sensible defaults (no filters, page 1).
+- Allow `UX-CONTRACT.md` to override URL persistence only for transient, sensitive, non-shareable, or architecture-constrained state; record the reason rather than silently keeping committed dataset state in component memory.
 
 ```tsx
 // Example: sync filters with URL

@@ -408,6 +408,46 @@
       "files": ["fixtures/canonical-owner-drift.vue", "fixtures/crud-failure-gap.md"],
       "evidence_required": ["premium-audit-json", "command-results", "browser-state-matrix"],
       "negative_oracle": "Fails if audit_project.py executes arbitrary commands, mutates the project, or is used as the sole proof of runtime compliance."
+    },
+    {
+      "id": 53,
+      "prompt": "Build the initial loading state for this order table. The prompt and project contract do not request skeletons.",
+      "expected_output": "Uses the project's app-owned loading indicator/spinner by default, reserves compatible table geometry, prevents indefinite/stale loading, and does not invent skeleton rows merely because the prompt omitted loading details.",
+      "files": ["fixtures/default-loading-spinner.vue"],
+      "evidence_required": ["component-state-test", "slow-network-browser-test"],
+      "negative_oracle": "Fails if it treats skeleton as mandatory, uses an unbounded layout-shifting spinner, or permits stale work to clear the current loading state."
+    },
+    {
+      "id": 54,
+      "prompt": "Add search, status filter, sort, page, and page-size controls to an admin orders table. No business exception to URL persistence is documented.",
+      "expected_output": "Uses URL search parameters as the default source of truth for committed search, active filters, sort, page, and page size; restores state on reload and Back/Forward; resets/clamps page when query semantics or record count changes.",
+      "files": [],
+      "evidence_required": ["url-state-test", "back-forward-browser-test", "reload-test"],
+      "negative_oracle": "Fails if committed dataset state exists only in component memory, or if it ignores a documented transient/sensitive/non-shareable business override."
+    },
+    {
+      "id": 55,
+      "prompt": "Audit this product textarea and form error behavior for the premium contract.",
+      "expected_output": "Reports form.textarea-resize-missing, applies the canonical shared Textarea or resize-none with adequate height/auto-grow, associates labels and errors, sets aria-invalid on invalid state, references existing error/help content, and focuses the first invalid field on submit.",
+      "files": ["fixtures/textarea-resize-and-label-gap.vue"],
+      "evidence_required": ["premium-audit-json", "form-accessibility-test"],
+      "negative_oracle": "Fails if it leaves browser resize enabled, uses placeholder as the only label, adds dangling ARIA references, or claims static inspection proves first-error focus."
+    },
+    {
+      "id": 56,
+      "prompt": "Make this long edit modal and short delete confirmation consistent on narrow and short viewports.",
+      "expected_output": "Keeps both app-owned and within visual viewport/safe-area bounds, gives long edit content an internal scroller with reachable title/actions, avoids virtual-keyboard obstruction, keeps the short confirmation compact, and preserves modal focus/inert/Escape/restore behavior. A persistent non-modal drawer is allowed only as a documented variant.",
+      "files": ["fixtures/responsive-dialog-gap.vue"],
+      "evidence_required": ["narrow-viewport-browser-test", "short-viewport-test", "modal-focus-test"],
+      "negative_oracle": "Fails if fixed dimensions overflow the viewport, actions become unreachable, a non-modal drawer claims modal semantics, or destructive failure closes the dialog before server success."
+    },
+    {
+      "id": 57,
+      "prompt": "Review keyboard, touch, and zoom evidence for a standard internal admin screen whose project contract has no extended mobile accessibility requirement.",
+      "expected_output": "Keeps semantic/native keyboard behavior, visible focus, and authored widget/modal keyboard contracts as the required baseline, while reporting touch-target measurement, cross-device touch, and the full 200% zoom matrix as recommended rather than blocking for this project.",
+      "files": [],
+      "evidence_required": ["baseline-accessibility-test", "advisory-review-notes"],
+      "negative_oracle": "Fails if it makes all accessibility optional, or makes advisory touch/zoom evidence a blocking requirement without a project accessibility/platform contract."
     }
   ]
 }

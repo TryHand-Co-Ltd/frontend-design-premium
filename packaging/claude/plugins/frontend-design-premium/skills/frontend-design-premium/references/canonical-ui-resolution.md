@@ -34,6 +34,8 @@ When a canonical owner exists, reuse it or extend it through a business-named va
 
 When a deliberate system decision changes, update the contract, runtime owner, and verification evidence in the same changeset. When no owner exists and the behavior will recur, create one shared primitive and record the decision. For a legacy product, migrate the touched workflow and prevent new drift; do not require a big-bang rewrite.
 
+The absence of a UI library does not automatically make native controls canonical. If a maintained project primitive exists, reuse it. Otherwise choose native or authored ownership from product requirements: native is valid when platform-owned geometry, locale, and interaction are accepted; authored is required when the product owns those behaviors.
+
 ## Optional project manifest
 
 `premium-ui.json` makes ownership and evidence machine-readable without forcing a framework:
@@ -81,5 +83,7 @@ From another working directory use `python <this-skill-dir>/scripts/audit_projec
 - Exit `2`: malformed configuration or unresolved canonical ownership prevents a meaningful strict audit.
 
 The JSON report contains a stable schema, file/line when available, rule ID, severity, category, message, remediation, and summary counts. Static inspection can detect missing contracts, ownership gaps, selected anti-patterns, and missing evidence declarations. It cannot prove keyboard operation, focus restoration, popup collision, localization quality, accessibility, CRUD correctness, or failure recovery.
+
+The initial form audit includes `form.novalidate-missing` and `form.textarea-resize-missing`. The textarea rule checks literal product markup for `resize-none`/`resize: none`; using the canonical shared Textarea owner remains preferred. Label activation, dynamic `aria-invalid`, live `aria-describedby`, first-error focus, responsive modal behavior, and other runtime interactions require project-owned component/browser evidence.
 
 Run every configured project command separately and report its real result. Never claim runtime compliance from the static audit alone.
