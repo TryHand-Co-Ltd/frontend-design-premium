@@ -26,6 +26,21 @@ def contains(relative: str, *patterns: str) -> bool:
     return all(re.search(pattern, text, re.IGNORECASE | re.MULTILINE) for pattern in patterns)
 
 
+def section(relative: str, heading: str, marker: str) -> str:
+    text = read(relative)
+    match = re.search(rf"(?m)^{re.escape(marker)}\s+{heading}\s*$", text, re.IGNORECASE)
+    if match is None:
+        return ""
+    remainder = text[match.end():]
+    next_heading = re.search(rf"(?m)^{re.escape(marker)}\s+", remainder)
+    return remainder[:next_heading.start()] if next_heading else remainder
+
+
+def section_contains(relative: str, heading: str, marker: str, *patterns: str) -> bool:
+    text = section(relative, heading, marker)
+    return bool(text) and all(re.search(pattern, text, re.IGNORECASE | re.MULTILINE) for pattern in patterns)
+
+
 legacy_checks = {
     "Table pagination + load-more decision": contains("SKILL.md", r"pagination", r"load.?more"),
     "Hover style + pointer semantics": contains("SKILL.md", r"hover", r"pointer"),
@@ -178,35 +193,35 @@ def japan_eval_proof() -> tuple[bool, list[str]]:
 
 def single_select_contract() -> tuple[bool, list[str]]:
     failures: list[str] = []
-    required = {
-        "SKILL.md": [
-            r"single-select|select dropdown",
-            r"native.*authored|authored.*native",
-            r"data-entry-patterns\.md",
-        ],
-        "references/data-entry-patterns.md": [
+    required_sections = (
+        (
+            "SKILL.md",
+            r"Forms and sensitive values",
+            "###",
+            (r"single-select dropdown", r"choose native or authored", r"data-entry-patterns\.md"),
+        ),
+        (
+            "references/data-entry-patterns.md",
             r"Single-select dropdowns",
-            r"1 CSS px",
-            r"listbox",
-            r"portal",
-            r"collision",
-        ],
-        "references/anti-patterns.md": [
-            r"Native select used when authored popup geometry is required",
-            r"<select",
-            r"option",
-        ],
-        "references/verification-checklist.md": [
-            r"native.*authored|authored.*native",
-            r"1 CSS px",
-            r"open popup",
-            r"long option",
-        ],
-    }
-    for relative, patterns in required.items():
-        for pattern in patterns:
-            if not contains(relative, pattern):
-                failures.append(f"{relative} missing /{pattern}/")
+            "##",
+            (r"platform-owned", r"native `<select>`", r"authored design", r"1 CSS px", r"listbox", r"portal", r"collision"),
+        ),
+        (
+            "references/anti-patterns.md",
+            r"P\. Native select used when authored popup geometry is required",
+            "##",
+            (r"<select", r"option", r"native select", r"authored"),
+        ),
+        (
+            "references/verification-checklist.md",
+            r"Forms and advanced inputs",
+            "##",
+            (r"native or authored", r"1 CSS px", r"open popup", r"long option"),
+        ),
+    )
+    for relative, heading, marker, patterns in required_sections:
+        if not section_contains(relative, heading, marker, *patterns):
+            failures.append(f"{relative} section /{heading}/ is missing its single-select contract")
 
     data = json.loads(read("evals/evals.json"))
     case = next((item for item in data.get("evals", []) if item.get("id") == 39), None)
@@ -406,7 +421,7 @@ def review_gap_regressions() -> tuple[bool, list[str]]:
             ['type="time"', 'type="month"', 'type="week"', 'type="datetime-local"'],
         ),
         46: ("webkit-only-scrollbar-gap.css", ["::-webkit-scrollbar", "::-webkit-scrollbar-thumb"]),
-        47: ("shared-shell-height-variants.vue", ["h-full", "min-h-screen", "height: 100%", "<form"]),
+        47: ("shared-shell-height-variants.vue", ["h-full", "min-h-screen", "height: 100%", "<table", "<form"]),
     }
     for case_id, (fixture_name, smells) in fixture_smells.items():
         case = cases.get(case_id)

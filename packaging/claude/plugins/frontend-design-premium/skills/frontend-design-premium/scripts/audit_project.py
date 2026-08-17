@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic, read-only audit for frontend-design-premium projects."""
+"""Deterministic, non-executing audit for frontend-design-premium projects."""
 
 from __future__ import annotations
 
@@ -61,6 +61,23 @@ class AuditResult:
         }
 
 
+@dataclass(frozen=True)
+class HtmlTag:
+    name: str
+    attributes: str
+    start: int
+    end: int
+    closing: bool
+    self_closing: bool
+
+
+@dataclass(frozen=True)
+class CssRule:
+    selector: str
+    body: str
+    start: int
+
+
 def finding(
     rule_id: str,
     message: str,
@@ -83,6 +100,427 @@ def relative(root: Path, path: Path) -> str:
 
 def line_number(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
+
+
+def mask_comments(text: str) -> str:
+    """Mask HTML/CSS block comments while preserving offsets and line numbers."""
+
+    def replace(match: re.Match[str]) -> str:
+        return "".join("\n" if char == "\n" else " " for char in match.group(0))
+
+    return re.sub(r"<!--.*?-->|/\*.*?\*/", replace, text, flags=re.DOTALL)
+
+
+def find_tag_end(text: str, start: int) -> int | None:
+    html_quote: str | None = None
+    expression_quote: str | None = None
+    expression_depth = 0
+    escaped = False
+    for offset in range(start, len(text)):
+        char = text[offset]
+        if html_quote is not None:
+            if char == html_quote:
+                html_quote = None
+            continue
+        if expression_quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == expression_quote:
+                expression_quote = None
+            continue
+        if expression_depth:
+            if char in {'"', "'", "`"}:
+                expression_quote = char
+            elif char == "{":
+                expression_depth += 1
+            elif char == "}":
+                expression_depth -= 1
+            continue
+        if char in {'"', "'"}:
+            html_quote = char
+        elif char == "{":
+            expression_depth = 1
+        elif char == ">":
+            return offset + 1
+    return None
+
+
+def find_expression_end(text: str, start: int) -> int:
+    """Return the offset after a balanced JSX/template expression."""
+    depth = 0
+    quote: str | None = None
+    escaped = False
+    offset = start
+    while offset < len(text):
+        char = text[offset]
+        next_char = text[offset + 1] if offset + 1 < len(text) else ""
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+        elif char in {'"', "'", "`"}:
+            quote = char
+        elif char == "/" and next_char == "/":
+            newline = text.find("\n", offset + 2)
+            offset = len(text) if newline < 0 else newline
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return offset + 1
+        offset += 1
+    return len(text)
+
+
+def is_regex_literal_start(text: str, offset: int, boundary: int = 0) -> bool:
+    prefix = text[boundary:offset].rstrip()
+    if not prefix:
+        return True
+    if prefix[-1] in "=([{,:;!?&|+-*%^~<>":
+        return True
+    return bool(re.search(
+        r"\b(?:return|case|throw|yield|await|typeof|instanceof|in|of|delete|void|new)\s*$",
+        prefix,
+    ))
+
+
+def find_regex_literal_end(text: str, start: int) -> int | None:
+    escaped = False
+    character_class = False
+    offset = start + 1
+    while offset < len(text):
+        char = text[offset]
+        if char == "\n" and not escaped:
+            return None
+        if escaped:
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == "[":
+            character_class = True
+        elif char == "]" and character_class:
+            character_class = False
+        elif char == "/" and not character_class:
+            offset += 1
+            while offset < len(text) and text[offset].isalpha():
+                offset += 1
+            return offset
+        offset += 1
+    return None
+
+
+def next_regex_literal(text: str, start: int, limit: int) -> int:
+    offset = text.find("/", start, limit)
+    while offset >= 0:
+        if not text.startswith("//", offset) and is_regex_literal_start(text, offset, start):
+            return offset
+        offset = text.find("/", offset + 1, limit)
+    return -1
+
+
+def mask_expression_code(text: str) -> str:
+    """Mask code literals/comments in an expression while retaining nested JSX tags."""
+    output = list(text)
+    tag_pattern = re.compile(r"<\s*/?\s*[A-Za-z][\w:-]*\b")
+    offset = 0
+    while offset < len(text):
+        tag = tag_pattern.match(text, offset)
+        if tag is not None:
+            end = find_tag_end(text, tag.end())
+            if end is not None:
+                offset = end
+                continue
+        if text.startswith("//", offset):
+            newline = text.find("\n", offset + 2)
+            end = len(text) if newline < 0 else newline
+            for index in range(offset, end):
+                output[index] = " "
+            offset = end
+            continue
+        if text[offset] == "/" and is_regex_literal_start(text, offset):
+            end = find_regex_literal_end(text, offset)
+            if end is not None:
+                for index in range(offset, end):
+                    if output[index] != "\n":
+                        output[index] = " "
+                offset = end
+                continue
+        if text[offset] in {'"', "'", "`"}:
+            quote = text[offset]
+            end = offset + 1
+            escaped = False
+            while end < len(text):
+                char = text[end]
+                end += 1
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == quote:
+                    break
+            for index in range(offset, end):
+                if output[index] != "\n":
+                    output[index] = " "
+            offset = end
+            continue
+        offset += 1
+    return "".join(output)
+
+
+def iter_html_tags(text: str, names: set[str] | None = None) -> Iterable[HtmlTag]:
+    searchable = mask_comments(text)
+    pattern = re.compile(r"<\s*(?P<closing>/)?\s*(?P<name>[A-Za-z][\w:-]*)\b")
+    void_tags = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+    raw_content_tags = {"script", "style"}
+    stack: list[str] = []
+    offset = 0
+    while offset < len(searchable):
+        if stack and stack[-1] in raw_content_tags:
+            closing = re.search(rf"<\s*/\s*{re.escape(stack[-1])}\b", searchable[offset:], re.IGNORECASE)
+            if closing is None:
+                return
+            candidate = offset + closing.start()
+        elif not stack and searchable[offset] in {'"', "'", "`"}:
+            quote = searchable[offset]
+            offset += 1
+            escaped = False
+            while offset < len(searchable):
+                char = searchable[offset]
+                offset += 1
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == quote:
+                    break
+            continue
+        elif not stack and searchable.startswith("//", offset):
+            newline = searchable.find("\n", offset + 2)
+            offset = len(searchable) if newline < 0 else newline + 1
+            continue
+        elif not stack and searchable[offset] == "/" and is_regex_literal_start(searchable, offset):
+            regex_end = find_regex_literal_end(searchable, offset)
+            offset = offset + 1 if regex_end is None else regex_end
+            continue
+        else:
+            candidate = searchable.find("<", offset)
+            if candidate < 0:
+                return
+            if stack:
+                expression = searchable.find("{", offset)
+                if expression >= 0 and expression < candidate:
+                    expression_end = find_expression_end(searchable, expression)
+                    searchable = (
+                        searchable[:expression]
+                        + mask_expression_code(searchable[expression:expression_end])
+                        + searchable[expression_end:]
+                    )
+                    offset = expression + 1
+                    continue
+            if not stack:
+                next_quote = min(
+                    (position for quote in ('"', "'", "`") if (position := searchable.find(quote, offset)) >= 0),
+                    default=-1,
+                )
+                next_comment = searchable.find("//", offset)
+                next_regex = next_regex_literal(searchable, offset, candidate)
+                boundaries = [position for position in (next_quote, next_comment, next_regex) if position >= 0]
+                if boundaries and min(boundaries) < candidate:
+                    offset = min(boundaries)
+                    continue
+        match = pattern.match(searchable, candidate)
+        if match is None:
+            offset = candidate + 1
+            continue
+        end = find_tag_end(searchable, match.end())
+        if end is None:
+            return
+        name = match.group("name").casefold()
+        attributes = searchable[match.end():end - 1]
+        closing = bool(match.group("closing"))
+        self_closing = attributes.rstrip().endswith("/")
+        if names is None or name in names:
+            yield HtmlTag(
+                name=name,
+                attributes=attributes,
+                start=match.start(),
+                end=end,
+                closing=closing,
+                self_closing=self_closing,
+            )
+        if closing:
+            match_index = next((index for index in range(len(stack) - 1, -1, -1) if stack[index] == name), None)
+            if match_index is not None:
+                del stack[match_index:]
+        elif not self_closing and name not in void_tags:
+            stack.append(name)
+        offset = end
+
+
+def has_attribute(attributes: str, name: str) -> bool:
+    return bool(re.search(rf"(?<![\w:-]){re.escape(name)}(?=\s|=|/|$)", attributes, re.IGNORECASE))
+
+
+def attribute_value(attributes: str, name: str) -> str | None:
+    match = re.search(
+        rf"(?<![\w:-]){re.escape(name)}\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s/>]+))",
+        attributes,
+        re.IGNORECASE,
+    )
+    if match is None:
+        return None
+    return next((value for value in match.groups() if value is not None), "")
+
+
+def html_regions(tags: Iterable[HtmlTag], text_length: int) -> list[tuple[HtmlTag, int]]:
+    void_tags = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+    stack: list[HtmlTag] = []
+    regions: list[tuple[HtmlTag, int]] = []
+    for tag in tags:
+        if tag.closing:
+            match_index = next((
+                index for index in range(len(stack) - 1, -1, -1)
+                if stack[index].name == tag.name
+            ), None)
+            if match_index is not None:
+                opening = stack[match_index]
+                del stack[match_index:]
+                regions.append((opening, tag.start))
+        elif not tag.self_closing and tag.name not in void_tags:
+            stack.append(tag)
+    regions.extend((opening, text_length) for opening in stack)
+    return regions
+
+
+def iter_css_rules(text: str) -> Iterable[CssRule]:
+    searchable = mask_comments(text)
+    stack: list[tuple[str, int, int]] = []
+    statement_start = 0
+    quote: str | None = None
+    escaped = False
+    for offset, char in enumerate(searchable):
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in {'"', "'"}:
+            quote = char
+        elif char == ";":
+            statement_start = offset + 1
+        elif char == "{":
+            raw_selector = searchable[statement_start:offset]
+            selector = raw_selector.strip()
+            selector_start = statement_start + len(raw_selector) - len(raw_selector.lstrip())
+            stack.append((selector, selector_start, offset + 1))
+            statement_start = offset + 1
+        elif char == "}":
+            if stack:
+                selector, selector_start, body_start = stack.pop()
+                yield CssRule(selector, searchable[body_start:offset], selector_start)
+            statement_start = offset + 1
+
+
+def split_selectors(selector: str) -> list[str]:
+    """Split a selector list without treating commas inside functions as separators."""
+    selectors: list[str] = []
+    start = 0
+    depth = 0
+    quote: str | None = None
+    escaped = False
+    for offset, char in enumerate(selector):
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+        elif char in {'"', "'"}:
+            quote = char
+        elif char in "([":
+            depth += 1
+        elif char in ")]":
+            depth = max(0, depth - 1)
+        elif char == "," and depth == 0:
+            selectors.append(selector[start:offset].strip())
+            start = offset + 1
+    selectors.append(selector[start:].strip())
+    return [item for item in selectors if item]
+
+
+def scrollbar_surfaces(selector: str) -> list[str]:
+    surfaces: list[str] = []
+    for item in split_selectors(selector):
+        match = re.search(r"::\s*-webkit-scrollbar(?:-[a-z-]+)?", item, flags=re.IGNORECASE)
+        if match is not None:
+            surfaces.append(item[:match.start()].strip())
+    return surfaces
+
+
+def owning_surface(selector: str) -> str:
+    """Remove state qualifiers while preserving the selector's element identity."""
+    without_attributes = re.sub(r"\[[^\]]*\]", "", selector)
+    return re.sub(r"(?<![:\\]):(?!:)[\w-]+(?:\([^()]*\))?", "", without_attributes).strip()
+
+
+def selector_covers_surface(selector: str, surface: str) -> bool:
+    owner = owning_surface(surface)
+    for candidate in split_selectors(selector):
+        if candidate in {"*", ":root", "html", "body", "html *", "body *", ":where(*)"}:
+            return True
+        if candidate == surface or candidate == owner:
+            return True
+    return False
+
+
+def direct_css_body(body: str) -> str:
+    """Mask nested rule bodies so only declarations owned by this rule remain."""
+    output = list(body)
+    depth = 0
+    quote: str | None = None
+    escaped = False
+    for offset, char in enumerate(body):
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+        elif char in {'"', "'"}:
+            quote = char
+        elif char == "{":
+            depth += 1
+            output[offset] = " "
+        elif char == "}":
+            output[offset] = " "
+            depth = max(0, depth - 1)
+        elif depth and char != "\n":
+            output[offset] = " "
+    return "".join(output)
+
+
+def standards_cover_surface(surface: str, rules: Iterable[CssRule]) -> bool:
+    properties: set[str] = set()
+    for rule in rules:
+        if rule.selector.startswith("@") or not selector_covers_surface(rule.selector, surface):
+            continue
+        body = direct_css_body(rule.body)
+        if re.search(r"(?<![-\w])scrollbar-color\s*:", body, flags=re.IGNORECASE):
+            properties.add("color")
+        if re.search(r"(?<![-\w])scrollbar-width\s*:", body, flags=re.IGNORECASE):
+            properties.add("width")
+    return properties == {"color", "width"}
 
 
 def load_manifest(path: Path) -> tuple[dict[str, Any], list[Finding]]:
@@ -180,7 +618,17 @@ def inspect_contracts(project_root: Path, manifest: dict[str, Any]) -> list[Find
             category="unresolved",
         ))
         return findings
-    text = map_path.read_text(encoding="utf-8")
+    try:
+        text = map_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as error:
+        findings.append(finding(
+            "canonical.map-unreadable",
+            f"The configured Canonical UI Map cannot be read as UTF-8 text: {error}",
+            "Point canonicalMap to a readable UTF-8 contract file.",
+            file=relative(project_root, map_path),
+            category="unresolved",
+        ))
+        return findings
     rows, found_header = parse_canonical_map(text)
     if not found_header:
         findings.append(finding(
@@ -223,97 +671,187 @@ def inspect_source(project_root: Path, manifest: dict[str, Any]) -> list[Finding
     for path in iter_source_files(project_root, manifest):
         try:
             text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeError):
+        except (OSError, UnicodeError) as error:
+            findings.append(finding(
+                "source.unreadable",
+                f"Configured source file cannot be read as UTF-8 text: {error}",
+                "Convert the source to UTF-8 or remove it from the configured source roots.",
+                file=relative(project_root, path),
+                category="unresolved",
+            ))
             continue
         name = relative(project_root, path)
 
-        patterns = (
-            (r'href\s*=\s*["\']#["\']', "affordance.empty-href", "Empty hash links look actionable but have no destination.", "Use a real route/action or render non-interactive text."),
-            (r"<form\b(?![^>]*(?:novalidate|noValidate))[^>]*>", "form.novalidate-missing", "Application-owned form does not declare its validation owner.", "Add noValidate/novalidate and implement the canonical validation contract."),
-        )
-        for pattern, rule_id, message, remediation in patterns:
-            for match in re.finditer(pattern, text, flags=re.IGNORECASE):
-                findings.append(finding(rule_id, message, remediation, file=name, line=line_number(text, match.start())))
-
-        for match in re.finditer(r"<button\b([^>]*)>", text, flags=re.IGNORECASE):
-            attributes = match.group(1)
-            if re.search(r"(?:disabled|@click|v-on:click|onclick|onClick|type\s*=\s*[\"']submit[\"'])", attributes):
-                continue
+        for match in re.finditer(r'href\s*=\s*["\']#["\']', text, flags=re.IGNORECASE):
             findings.append(finding(
-                "affordance.actionless-button",
-                "Enabled literal button has no detectable action or submit behavior.",
-                "Connect the button to a real action, make it a submit button, or disable/remove it.",
+                "affordance.empty-href",
+                "Empty hash links look actionable but have no destination.",
+                "Use a real route/action or render non-interactive text.",
                 file=name,
                 line=line_number(text, match.start()),
             ))
 
-        for match in re.finditer(r"<textarea\b([^>]*)>", text, flags=re.IGNORECASE):
-            attributes = match.group(1)
-            has_resize_none = bool(
-                re.search(r"\bresize-none\b", attributes)
-                or re.search(r"resize\s*:\s*none", attributes, flags=re.IGNORECASE)
-            )
-            if has_resize_none:
+        all_tags = list(iter_html_tags(text))
+        tags = [
+            tag for tag in all_tags
+            if tag.name in {"form", "button", "textarea", "select", "input"}
+        ]
+        form_depth = 0
+        select_tag: HtmlTag | None = None
+        native_date_tag: HtmlTag | None = None
+        for tag in tags:
+            if tag.name == "form":
+                if tag.closing:
+                    form_depth = max(0, form_depth - 1)
+                    continue
+                if not has_attribute(tag.attributes, "novalidate"):
+                    findings.append(finding(
+                        "form.novalidate-missing",
+                        "Application-owned form does not declare its validation owner.",
+                        "Add noValidate/novalidate and implement the canonical validation contract.",
+                        file=name,
+                        line=line_number(text, tag.start),
+                    ))
+                if not tag.self_closing:
+                    form_depth += 1
                 continue
-            findings.append(finding(
-                "form.textarea-resize-missing",
-                "Literal product textarea does not show evidence of the canonical resize-none rule.",
-                "Use the shared Textarea owner or apply resize-none/resize: none with adequate height or auto-grow behavior.",
-                file=name,
-                line=line_number(text, match.start()),
-            ))
+            if tag.closing:
+                continue
+            if tag.name == "button":
+                button_type = (attribute_value(tag.attributes, "type") or "").casefold()
+                has_action = bool(re.search(
+                    r"(?:@click(?:\.[\w-]+)*|v-on:click(?:\.[\w-]+)*|onclick)(?=\s|=|$)",
+                    tag.attributes,
+                    flags=re.IGNORECASE,
+                ))
+                is_form_submit = button_type not in {"button", "reset"} and (
+                    bool(form_depth) or has_attribute(tag.attributes, "form")
+                )
+                if (
+                    has_attribute(tag.attributes, "disabled")
+                    or button_type == "submit"
+                    or is_form_submit
+                ):
+                    continue
+                if not has_action:
+                    findings.append(finding(
+                        "affordance.actionless-button",
+                        "Enabled literal button has no detectable action or submit behavior.",
+                        "Connect the button to a real action, make it a submit button, or disable/remove it.",
+                        file=name,
+                        line=line_number(text, tag.start),
+                    ))
+            elif tag.name == "textarea":
+                has_resize_none = bool(
+                    re.search(r"\bresize-none\b", tag.attributes)
+                    or re.search(r"resize\s*:\s*none", tag.attributes, flags=re.IGNORECASE)
+                )
+                if not has_resize_none:
+                    findings.append(finding(
+                        "form.textarea-resize-missing",
+                        "Literal product textarea does not show evidence of the canonical resize-none rule.",
+                        "Use the shared Textarea owner or apply resize-none/resize: none with adequate height or auto-grow behavior.",
+                        file=name,
+                        line=line_number(text, tag.start),
+                    ))
+            elif tag.name == "select" and select_tag is None:
+                select_tag = tag
+            elif tag.name == "input" and native_date_tag is None:
+                input_type = (attribute_value(tag.attributes, "type") or "").casefold()
+                if input_type in {"date", "time", "month", "week", "datetime-local"}:
+                    native_date_tag = tag
 
-        if re.search(r"<select\b", text, flags=re.IGNORECASE) and ownership.get("Select/Listbox") != "native":
+        select_owner = ownership.get("Select/Listbox")
+        if select_tag is not None and select_owner != "native":
+            undecided = not isinstance(select_owner, str) or not select_owner.strip()
             findings.append(finding(
-                "ownership.native-select-undecided",
-                "Native select is used without an explicit native ownership decision.",
+                "ownership.native-select-undecided" if undecided else "ownership.native-select-conflict",
+                (
+                    "Native select is used without an explicit ownership decision."
+                    if undecided
+                    else f"Native select conflicts with recorded Select/Listbox ownership: {select_owner}."
+                ),
                 "Record Select/Listbox as native or reuse the authored canonical owner.",
                 file=name,
-                line=line_number(text, re.search(r"<select\b", text, flags=re.IGNORECASE).start()),
-                category="unresolved",
+                line=line_number(text, select_tag.start),
+                category="unresolved" if undecided else "violation",
             ))
-        date_match = re.search(r"<input\b[^>]*type\s*=\s*[\"']date[\"']", text, flags=re.IGNORECASE)
-        if date_match and ownership.get("Date") != "native":
+
+        date_owner = ownership.get("Date")
+        if native_date_tag is not None and date_owner != "native":
+            undecided = not isinstance(date_owner, str) or not date_owner.strip()
             findings.append(finding(
-                "ownership.native-date-undecided",
-                "Native date input is used without an explicit native ownership decision.",
+                "ownership.native-date-undecided" if undecided else "ownership.native-date-conflict",
+                (
+                    "Native date/time input is used without an explicit ownership decision."
+                    if undecided
+                    else f"Native date/time input conflicts with recorded Date ownership: {date_owner}."
+                ),
                 "Record Date as native or reuse the typed/authored canonical owner.",
                 file=name,
-                line=line_number(text, date_match.start()),
-                category="unresolved",
+                line=line_number(text, native_date_tag.start),
+                category="unresolved" if undecided else "violation",
             ))
 
-        has_table = bool(re.search(r"<table\b|DataTable|data-table", text, flags=re.IGNORECASE))
-        has_form = bool(re.search(r"<form\b|AppForm", text, flags=re.IGNORECASE))
-        viewport_locked = bool(re.search(r"(?:h-screen|h-dvh|min-h-screen|100vh|100dvh)", text))
-        overflow_hidden = bool(re.search(r"overflow-hidden|overflow\s*:\s*hidden", text))
-        if has_table and has_form and viewport_locked and overflow_hidden:
-            findings.append(finding(
-                "layout.shared-shell-overflow",
-                "Table viewport sizing leaks into a shared page/form shell.",
-                "Give the table body its own bounded scroll surface and let the page/form shell size naturally.",
-                file=name,
-                line=1,
+        searchable = mask_comments(text)
+        for container, region_end in html_regions(all_tags, len(searchable)):
+            raw_tag = searchable[container.start:container.end]
+            viewport_match = re.search(
+                r"(?:h-screen|h-dvh|h-svh|h-lvh|h-full|min-h-screen|100vh|100dvh|100svh|100lvh|height\s*:\s*100%)",
+                raw_tag,
+                flags=re.IGNORECASE,
+            )
+            overflow_hidden = bool(re.search(
+                r"overflow-hidden|overflow\s*:\s*hidden",
+                raw_tag,
+                flags=re.IGNORECASE,
             ))
+            if viewport_match is None or not overflow_hidden:
+                continue
+            region = searchable[container.end:region_end]
+            has_table = bool(re.search(r"<table\b|DataTable|data-table", region, flags=re.IGNORECASE))
+            has_form = bool(re.search(r"<form\b|AppForm", region, flags=re.IGNORECASE))
+            if has_table and has_form:
+                findings.append(finding(
+                    "layout.shared-shell-overflow",
+                    "Table viewport sizing leaks into a shared page/form shell.",
+                    "Give the table body its own bounded scroll surface and let the page/form shell size naturally.",
+                    file=name,
+                    line=line_number(text, container.start + viewport_match.start()),
+                ))
+                break
 
-        if path.suffix.lower() in {".css", ".scss"} and "::-webkit-scrollbar" in text:
-            webkit_offset = text.index("::-webkit-scrollbar")
-            if "scrollbar-color" not in text and "scrollbar-width" not in text:
+        if path.suffix.lower() in {".css", ".scss"}:
+            css_rules = list(iter_css_rules(text))
+            webkit_rules = [
+                (rule, surface)
+                for rule in css_rules
+                if not rule.selector.startswith("@")
+                for surface in scrollbar_surfaces(rule.selector)
+            ]
+            uncovered = next((
+                rule for rule, surface in webkit_rules
+                if not standards_cover_surface(surface, css_rules)
+            ), None)
+            if uncovered is not None:
                 findings.append(finding(
                     "scrollbar.webkit-only",
-                    "Scrollbar theme uses only WebKit engine selectors.",
+                    "Scrollbar theme does not provide both standards-based scrollbar properties.",
                     "Add global scrollbar-color and scrollbar-width standards properties plus fallbacks.",
                     file=name,
-                    line=line_number(text, webkit_offset),
+                    line=line_number(text, uncovered.start),
                 ))
-            selector_prefix = text[max(0, text.rfind("}", 0, webkit_offset) + 1):webkit_offset]
-            if re.search(r"\.(?:custom-scrollbar|scrollbar|ui-scroll)", selector_prefix):
+            opt_in = next((
+                rule for rule, _surface in webkit_rules
+                if re.search(r"\.(?:custom-scrollbar|scrollbar|ui-scroll)\b", rule.selector)
+            ), None)
+            if opt_in is not None:
                 findings.append(finding(
                     "scrollbar.opt-in-base",
                     "Base scrollbar theming is activated by an opt-in class.",
                     "Apply base scrollbar tokens globally; reserve classes for geometry or semantic exceptions.",
                     file=name,
-                    line=line_number(text, webkit_offset),
+                    line=line_number(text, opt_in.start),
                 ))
     return findings
 
@@ -365,7 +903,8 @@ def audit_project(project_root: Path, mode: str, config_path: Path | None = None
 
 
 def exit_code(result: AuditResult) -> int:
-    if any(item.rule_id == "config.invalid-json" for item in result.findings):
+    operational_failures = {"config.invalid-json", "output.write-failed"}
+    if any(item.rule_id in operational_failures for item in result.findings):
         return 2
     if result.mode == "report":
         return 0
@@ -390,11 +929,21 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     result = audit_project(args.project_root, args.mode, args.config)
     rendered = json.dumps(result.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    sys.stdout.write(rendered)
     if not args.no_write:
         output = args.output or args.project_root / "premium-audit.json"
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(rendered, encoding="utf-8")
+        try:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(rendered, encoding="utf-8")
+        except OSError as error:
+            result = AuditResult(result.mode, result.project_root, (*result.findings, finding(
+                "output.write-failed",
+                f"Audit report artifact cannot be written: {error}",
+                "Choose a writable --output file or pass --no-write for stdout-only inspection.",
+                file=str(output),
+                category="unresolved",
+            )))
+            rendered = json.dumps(result.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    sys.stdout.write(rendered)
     return exit_code(result)
 
 

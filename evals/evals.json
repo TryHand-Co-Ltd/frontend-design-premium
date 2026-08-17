@@ -407,7 +407,7 @@
       "expected_output": "Runs audit_project.py in strict mode, reports stable rule IDs and exit status, then separately runs configured unit/E2E/accessibility/premium commands. It states that static inspection cannot prove keyboard, focus, localization, popup collision, accessibility, CRUD, or failure recovery.",
       "files": ["fixtures/canonical-owner-drift.vue", "fixtures/crud-failure-gap.md"],
       "evidence_required": ["premium-audit-json", "command-results", "browser-state-matrix"],
-      "negative_oracle": "Fails if audit_project.py executes arbitrary commands, mutates the project, or is used as the sole proof of runtime compliance."
+      "negative_oracle": "Fails if audit_project.py executes arbitrary commands, mutates source/config/contract/product files beyond its declared premium-audit.json or --output artifact, or is used as the sole proof of runtime compliance."
     },
     {
       "id": 53,

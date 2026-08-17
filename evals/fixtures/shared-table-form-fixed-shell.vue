@@ -14,7 +14,9 @@ const activeTab = ref<'table' | 'form'>('table')
 
     <section class="min-h-0 flex-1 overflow-hidden">
       <div v-if="activeTab === 'table'" class="flex h-full min-h-0 flex-col">
-        <div class="min-h-0 flex-1 overflow-auto">Large table</div>
+        <div class="min-h-0 flex-1 overflow-auto">
+          <table><tbody><tr><td>Large table</td></tr></tbody></table>
+        </div>
       </div>
 
       <!-- The 20-field form is now clipped inside the table-owned viewport. -->

@@ -11,7 +11,9 @@ const activeTab = ref<'table' | 'form'>('table')
     <button type="button" @click="activeTab = 'form'">詳細</button>
 
     <section class="h-full overflow-hidden">
-      <div v-if="activeTab === 'table'" class="min-h-0 overflow-auto">大量データ</div>
+      <div v-if="activeTab === 'table'" class="min-h-0 overflow-auto">
+        <table><tbody><tr><td>大量データ</td></tr></tbody></table>
+      </div>
       <form v-else class="h-full overflow-hidden">20項目の注文フォーム</form>
     </section>
   </main>

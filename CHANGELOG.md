@@ -15,12 +15,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Explicit label, invalid-state, error-association, first-error-focus, and responsive-dialog review contracts.
 - An explicit native-versus-authored date-picker ownership contract covering locale, labels, storage/display separation, accessibility, collision behavior, and real-browser verification.
 - Japanese calendar checks for complete `ja-JP` UI, Gregorian-by-default behavior, and fallback-English detection.
+- Eval #39 for single-select popup ownership and authored trigger/popup geometry.
 - Eval case #40 and a deliberately broken native date-input fixture reproducing an English popup on a Japanese form.
 - A global scrollbar baseline contract and eval #41, preventing new overflow regions from falling back to browser defaults when an opt-in class is omitted.
 - A per-panel scroll-ownership contract and eval #42, preventing viewport-sized table rules from fixing or clipping sibling long forms.
+- Review-gap regression evals #43–47 for native datalist, utility-based select stripping, sibling native pickers, WebKit-only scrollbars, and shared-shell height variants.
+- Canonical UI project-audit evals #48–52 for owner drift, global scrollbar enforcement, CRUD failure recovery, stable JSON output, and static/runtime evidence boundaries.
+- Contract-default evals #53–57 for loading indicators, URL-state persistence, textarea/label behavior, responsive dialogs, and accessibility evidence scope.
 
 ### Changed
 
+- Hardened the project auditor against unreadable contracts/sources, output-write failures, JSX/Vue attribute syntax, form-associated submit buttons, scoped shared-shell detection, and selector-aware cross-engine scrollbar checks.
 - Made stable app-owned loading indicators/spinners the default and skeletons explicit project/prompt opt-ins.
 - Made committed search/filter/sort/page/page-size URL state the default with documented business overrides.
 - Split required keyboard/accessibility behavior from recommended touch, cross-device, and full zoom evidence.

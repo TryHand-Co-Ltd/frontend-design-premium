@@ -76,13 +76,13 @@ python scripts/audit_project.py <project-root> --mode report
 python scripts/audit_project.py <project-root> --mode strict
 ```
 
-From another working directory use `python <this-skill-dir>/scripts/audit_project.py ...`. Optional flags are `--config <path>`, `--output <path>`, and `--no-write`.
+From another working directory use `python <this-skill-dir>/scripts/audit_project.py ...`. The auditor never executes project commands or edits source/config/contract/product files. It writes `premium-audit.json` by default (or the declared `--output <path>`); pass `--no-write` for stdout-only inspection. `--config <path>` selects a non-default manifest.
 
 - Exit `0`: clean strict audit, or report-mode findings recorded successfully.
 - Exit `1`: strict contract violations.
-- Exit `2`: malformed configuration or unresolved canonical ownership prevents a meaningful strict audit.
+- Exit `2`: malformed/unreadable configuration or source, unresolved canonical ownership, or audit-artifact write failure prevents a complete result.
 
-The JSON report contains a stable schema, file/line when available, rule ID, severity, category, message, remediation, and summary counts. Static inspection can detect missing contracts, ownership gaps, selected anti-patterns, and missing evidence declarations. It cannot prove keyboard operation, focus restoration, popup collision, localization quality, accessibility, CRUD correctness, or failure recovery.
+The JSON report contains a stable schema, file/line when available, rule ID, severity, category, message, remediation, and summary counts. Unreadable configured source/contract files and output-write failures are returned as structured findings rather than tracebacks. Static inspection can detect missing contracts, ownership gaps, selected anti-patterns, and missing evidence declarations. It cannot prove keyboard operation, focus restoration, popup collision, localization quality, accessibility, CRUD correctness, or failure recovery.
 
 The initial form audit includes `form.novalidate-missing` and `form.textarea-resize-missing`. The textarea rule checks literal product markup for `resize-none`/`resize: none`; using the canonical shared Textarea owner remains preferred. Label activation, dynamic `aria-invalid`, live `aria-describedby`, first-error focus, responsive modal behavior, and other runtime interactions require project-owned component/browser evidence.
 
