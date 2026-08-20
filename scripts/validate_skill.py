@@ -23,6 +23,14 @@ CLAUDE_PACKAGE_SKILL = (
     / "skills"
     / "frontend-design-premium"
 )
+CURSOR_PACKAGE_ROOT = (
+    ROOT
+    / "packaging"
+    / "cursor"
+    / "plugins"
+    / "frontend-design-premium"
+)
+CURSOR_PACKAGE_SKILL = CURSOR_PACKAGE_ROOT / "skills" / "frontend-design-premium"
 PACKAGE_TEXT_SUFFIXES = {".json", ".md", ".py", ".txt", ".yaml", ".yml"}
 
 
@@ -32,6 +40,34 @@ def package_bytes(path: Path) -> bytes:
     if path.suffix.lower() in PACKAGE_TEXT_SUFFIXES:
         return data.replace(b"\r\n", b"\n")
     return data
+
+
+def package_source_pairs(package_skill: Path) -> list[tuple[Path, Path]]:
+    """Map canonical source files to their generated package destinations."""
+    pairs = [
+        (SKILL, package_skill / "SKILL.md"),
+        (
+            ROOT / "scripts" / "audit_project.py",
+            package_skill / "scripts" / "audit_project.py",
+        ),
+        (
+            ROOT / "scripts" / "resolve_frontend_design.py",
+            package_skill / "scripts" / "resolve_frontend_design.py",
+        ),
+    ]
+    for source_dir_name in ("references", "assets"):
+        source_dir = ROOT / source_dir_name
+        for source_path in source_dir.rglob("*"):
+            if source_path.is_file():
+                pairs.append(
+                    (
+                        source_path,
+                        package_skill
+                        / source_dir_name
+                        / source_path.relative_to(source_dir),
+                    )
+                )
+    return pairs
 
 
 def where_npx() -> str | None:
@@ -194,6 +230,7 @@ def main() -> int:
         / "frontend-design-premium"
         / ".claude-plugin"
         / "plugin.json",
+        CURSOR_PACKAGE_ROOT / "plugin.json",
     ]
     for manifest_path in version_manifests:
         try:
@@ -220,37 +257,65 @@ def main() -> int:
     except (json.JSONDecodeError, OSError) as error:
         errors.append(f"invalid .claude-plugin/marketplace.json: {error}")
 
-    package_pairs = [
-        (SKILL, CLAUDE_PACKAGE_SKILL / "SKILL.md"),
-        (
-            ROOT / "scripts" / "audit_project.py",
-            CLAUDE_PACKAGE_SKILL / "scripts" / "audit_project.py",
-        ),
-        (
-            ROOT / "scripts" / "resolve_frontend_design.py",
-            CLAUDE_PACKAGE_SKILL / "scripts" / "resolve_frontend_design.py",
-        ),
-    ]
-    for source_dir_name in ("references", "assets"):
-        source_dir = ROOT / source_dir_name
-        for source_path in source_dir.rglob("*"):
-            if source_path.is_file():
-                package_pairs.append(
-                    (
-                        source_path,
-                        CLAUDE_PACKAGE_SKILL
-                        / source_dir_name
-                        / source_path.relative_to(source_dir),
-                    )
-                )
-    for source_path, packaged_path in package_pairs:
-        relative = packaged_path.relative_to(ROOT)
-        if not packaged_path.is_file():
-            errors.append(f"Claude package is missing generated source: {relative}")
-        elif packaged_path.read_bytes() != package_bytes(source_path):
+    cursor_marketplace_path = ROOT / ".cursor-plugin" / "marketplace.json"
+    try:
+        cursor_marketplace = json.loads(
+            cursor_marketplace_path.read_text(encoding="utf-8")
+        )
+        metadata = cursor_marketplace.get("metadata", {})
+        if metadata.get("version") != skill_version:
             errors.append(
-                f"Claude package source drift: {relative}; run scripts/build_claude_plugin.py"
+                ".cursor-plugin/marketplace.json metadata version does not match SKILL.md"
             )
+        plugin_root = metadata.get("pluginRoot", "")
+        cursor_plugins = cursor_marketplace.get("plugins", [])
+        cursor_plugin = next(
+            (item for item in cursor_plugins if item.get("name") == name),
+            None,
+        )
+        if cursor_plugin is None:
+            errors.append(".cursor-plugin/marketplace.json is missing the skill plugin")
+        else:
+            if cursor_plugin.get("version") != skill_version:
+                errors.append(
+                    ".cursor-plugin/marketplace.json plugin version does not match SKILL.md"
+                )
+            source = cursor_plugin.get("source", "")
+            resolved_source = ROOT / plugin_root / source
+            if resolved_source.resolve() != CURSOR_PACKAGE_ROOT.resolve():
+                errors.append(
+                    ".cursor-plugin/marketplace.json source does not resolve to the Cursor package"
+                )
+    except (json.JSONDecodeError, OSError) as error:
+        errors.append(f"invalid .cursor-plugin/marketplace.json: {error}")
+
+    cursor_manifest_path = CURSOR_PACKAGE_ROOT / "plugin.json"
+    try:
+        cursor_manifest = json.loads(cursor_manifest_path.read_text(encoding="utf-8"))
+        if cursor_manifest.get("$schema") != (
+            "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+        ):
+            errors.append("Cursor Agent Plugin must declare the 1.0.0 schema")
+        if cursor_manifest.get("name") != name:
+            errors.append("Cursor Agent Plugin name does not match SKILL.md")
+    except (json.JSONDecodeError, OSError) as error:
+        errors.append(f"invalid {cursor_manifest_path.relative_to(ROOT)}: {error}")
+
+    generated_packages = (
+        ("Claude", CLAUDE_PACKAGE_SKILL, "scripts/build_claude_plugin.py"),
+        ("Cursor", CURSOR_PACKAGE_SKILL, "scripts/build_cursor_plugin.py"),
+    )
+    for package_name, package_skill, builder in generated_packages:
+        for source_path, packaged_path in package_source_pairs(package_skill):
+            relative = packaged_path.relative_to(ROOT)
+            if not packaged_path.is_file():
+                errors.append(
+                    f"{package_name} package is missing generated source: {relative}"
+                )
+            elif packaged_path.read_bytes() != package_bytes(source_path):
+                errors.append(
+                    f"{package_name} package source drift: {relative}; run {builder}"
+                )
 
     eval_path = ROOT / "evals" / "evals.json"
     if eval_path.is_file():

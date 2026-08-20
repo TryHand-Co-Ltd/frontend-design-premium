@@ -285,13 +285,14 @@ SUPPORTED_ROOTS: list[Path] = [
 
 
 def bundled_plugin_skill_root() -> Path | None:
-    """Return the containing Codex or Claude plugin's skills root."""
+    """Return the containing Agent, Codex, or Claude plugin's skills root."""
     try:
         skills_root = Path(__file__).resolve().parents[2]
     except IndexError:
         return None
     plugin_root = skills_root.parent
     plugin_manifests = (
+        plugin_root / "plugin.json",
         plugin_root / ".codex-plugin" / "plugin.json",
         plugin_root / ".claude-plugin" / "plugin.json",
     )

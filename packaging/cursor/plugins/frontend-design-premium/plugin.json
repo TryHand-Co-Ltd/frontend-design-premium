@@ -1,9 +1,11 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "frontend-design-premium",
-  "description": "Production UX contracts and durable design context for frontend implementation.",
   "version": "1.4.1",
+  "description": "Production UX contracts and durable design context for frontend implementation.",
   "author": {
-    "name": "TryHand Co., Ltd"
+    "name": "TryHand Co., Ltd",
+    "url": "https://github.com/TryHand-Co-Ltd"
   },
   "homepage": "https://github.com/TryHand-Co-Ltd/frontend-design-premium",
   "repository": "https://github.com/TryHand-Co-Ltd/frontend-design-premium",
@@ -14,6 +16,5 @@
     "design-system",
     "accessibility",
     "localization"
-  ],
-  "skills": "./skills/"
+  ]
 }
