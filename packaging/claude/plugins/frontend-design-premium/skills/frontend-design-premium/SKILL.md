@@ -4,12 +4,12 @@ description: Production UX and durable design-context layer that must be used to
 metadata:
   compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
   author: frontend-design-premium contributors
-  version: "1.4.0"
+  version: "1.4.1"
   upstream-skill: frontend-design
   upstream-tested:
     revision: "2026-02 — initial compatibility"
     digest: "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
-    tested-with-premium: "1.4.0"
+    tested-with-premium: "1.4.1"
   compatibility-policy:
     strict-on-release: true
     warn-on-untested: true

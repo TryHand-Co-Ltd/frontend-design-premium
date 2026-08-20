@@ -1,0 +1,34 @@
+{
+  "name": "tryhand",
+  "owner": {
+    "name": "TryHand Co., Ltd"
+  },
+  "metadata": {
+    "description": "Production-ready frontend UX skills from TryHand.",
+    "version": "1.4.1",
+    "pluginRoot": "packaging/cursor/plugins"
+  },
+  "plugins": [
+    {
+      "name": "frontend-design-premium",
+      "source": "frontend-design-premium",
+      "description": "Production UX contracts and durable design context for frontend implementation.",
+      "version": "1.4.1",
+      "author": {
+        "name": "TryHand Co., Ltd"
+      },
+      "homepage": "https://github.com/TryHand-Co-Ltd/frontend-design-premium",
+      "repository": "https://github.com/TryHand-Co-Ltd/frontend-design-premium",
+      "license": "Apache-2.0",
+      "keywords": [
+        "frontend",
+        "ux",
+        "design-system",
+        "accessibility",
+        "localization"
+      ],
+      "logo": "assets/logo.png",
+      "category": "Developer Tools"
+    }
+  ]
+}

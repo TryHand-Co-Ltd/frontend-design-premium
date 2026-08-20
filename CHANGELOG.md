@@ -4,6 +4,20 @@ All notable changes to this skill are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](VERSIONING.md).
 
+## 1.4.1 - 2026-08-20
+
+### Added
+
+- A self-contained Cursor Agent Plugin containing both `frontend-design` and
+  `frontend-design-premium`.
+- Cursor marketplace metadata, deterministic release ZIP and checksum output,
+  local testing guidance, and generated-package drift validation.
+
+### Changed
+
+- Synchronized Codex, Claude Code, Cursor, Pilot, and skill metadata at version
+  1.4.1. Core skill behavior and the tested upstream snapshot are unchanged.
+
 ## 1.4.0 - 2026-08-13
 
 ### Added

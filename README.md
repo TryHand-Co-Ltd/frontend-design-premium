@@ -2,8 +2,8 @@
 
 A production UX Agent Skill that composes with Anthropic's [`frontend-design`](https://github.com/anthropics/skills/tree/main/skills/frontend-design) skill.
 
-For end users, install the published self-contained plugin from the Codex or
-Claude Code marketplace. For local development, CI, or an unsupported harness,
+For end users, install the published self-contained plugin from the Codex,
+Claude Code, or Cursor marketplace. For local development, CI, or an unsupported harness,
 install the source skill directly with `scripts/install.py`; that route resolves
 an independently installed upstream `frontend-design` skill at runtime.
 
@@ -51,7 +51,7 @@ python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
   dist/codex-marketplace/plugins/frontend-design-premium
 ```
 
-The generated review archive is written to `dist/frontend-design-premium-codex-1.4.0.zip`.
+The generated review archive is written to `dist/frontend-design-premium-codex-1.4.1.zip`.
 It bundles the tested upstream `frontend-design` snapshot and verifies its recorded digest during every build. See [`packaging/codex/README.md`](packaging/codex/README.md) for local marketplace testing.
 
 #### Claude Code
@@ -74,6 +74,26 @@ claude plugin validate --strict packaging/claude/plugins/frontend-design-premium
 ```
 
 See [`packaging/claude/README.md`](packaging/claude/README.md) for local testing and release details.
+
+#### Cursor
+
+The repository also contains a portable, self-contained Agent Plugin for
+Cursor. Once the public listing is approved, open **Customize**, search for
+**Frontend Design Premium**, select **Install**, and choose project or user
+scope. Cursor can select the skills automatically, or invoke the premium layer
+manually with `/frontend-design-premium`.
+
+Build the package and GitHub release fallback archive with:
+
+```bash
+python scripts/build_cursor_plugin.py
+python scripts/validate_skill.py
+```
+
+The build writes `dist/frontend-design-premium-cursor-1.4.1.zip` and
+`dist/SHA256SUMS.cursor`. See
+[`packaging/cursor/README.md`](packaging/cursor/README.md) for local Cursor
+testing and Marketplace submission details.
 
 ### Direct source installation
 
@@ -122,7 +142,7 @@ Restart the harness if it does not support live skill discovery.
 
 | Command | What it does |
 |---------|-------------|
-| `python scripts/install.py --version` | Print skill version (`v1.4.0`) |
+| `python scripts/install.py --version` | Print skill version (`v1.4.1`) |
 | `python scripts/install.py --check` | Compare source version against each installed target |
 | `python scripts/install.py --list-targets` | Show install status per harness (link type + version) |
 | `python scripts/install.py --target agents` | Install to `.agents/skills/` (default) |
@@ -340,6 +360,7 @@ frontend-design-premium/
     ├── audit_project.py
     ├── build_claude_plugin.py
     ├── build_codex_plugin.py
+    ├── build_cursor_plugin.py
     ├── check_eval_fixtures.py
     ├── install.py
     ├── reconcile_check.py
@@ -363,8 +384,9 @@ It checks frontmatter, directory naming, description constraints, line budget, r
 
 To validate package output, first run the corresponding builder from the
 repository root, then run the marketplace validator shown in the relevant
-package guide: [`packaging/codex/README.md`](packaging/codex/README.md) or
-[`packaging/claude/README.md`](packaging/claude/README.md).
+package guide: [`packaging/codex/README.md`](packaging/codex/README.md),
+[`packaging/claude/README.md`](packaging/claude/README.md), or
+[`packaging/cursor/README.md`](packaging/cursor/README.md).
 
 Run the official Agent Skills reference validator:
 
