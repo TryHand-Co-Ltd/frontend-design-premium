@@ -87,6 +87,10 @@ def main() -> int:
         ROOT / "scripts" / "resolve_frontend_design.py",
         PREMIUM_OUT / "scripts" / "resolve_frontend_design.py",
     )
+    copy_file(
+        ROOT / "scripts" / "audit_project.py",
+        PREMIUM_OUT / "scripts" / "audit_project.py",
+    )
 
     copy_tree(VENDORED_UPSTREAM, UPSTREAM_OUT)
     copy_file(ROOT / "LICENSE", PLUGIN_OUT / "LICENSE")

@@ -26,6 +26,21 @@ def contains(relative: str, *patterns: str) -> bool:
     return all(re.search(pattern, text, re.IGNORECASE | re.MULTILINE) for pattern in patterns)
 
 
+def section(relative: str, heading: str, marker: str) -> str:
+    text = read(relative)
+    match = re.search(rf"(?m)^{re.escape(marker)}\s+{heading}\s*$", text, re.IGNORECASE)
+    if match is None:
+        return ""
+    remainder = text[match.end():]
+    next_heading = re.search(rf"(?m)^{re.escape(marker)}\s+", remainder)
+    return remainder[:next_heading.start()] if next_heading else remainder
+
+
+def section_contains(relative: str, heading: str, marker: str, *patterns: str) -> bool:
+    text = section(relative, heading, marker)
+    return bool(text) and all(re.search(pattern, text, re.IGNORECASE | re.MULTILINE) for pattern in patterns)
+
+
 legacy_checks = {
     "Table pagination + load-more decision": contains("SKILL.md", r"pagination", r"load.?more"),
     "Hover style + pointer semantics": contains("SKILL.md", r"hover", r"pointer"),
@@ -176,6 +191,323 @@ def japan_eval_proof() -> tuple[bool, list[str]]:
     return not failures, failures
 
 
+def single_select_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required_sections = (
+        (
+            "SKILL.md",
+            r"Forms and sensitive values",
+            "###",
+            (r"single-select dropdown", r"choose native or authored", r"data-entry-patterns\.md"),
+        ),
+        (
+            "references/data-entry-patterns.md",
+            r"Single-select dropdowns",
+            "##",
+            (r"platform-owned", r"native `<select>`", r"authored design", r"1 CSS px", r"listbox", r"portal", r"collision"),
+        ),
+        (
+            "references/anti-patterns.md",
+            r"P\. Native select used when authored popup geometry is required",
+            "##",
+            (r"<select", r"option", r"native select", r"authored"),
+        ),
+        (
+            "references/verification-checklist.md",
+            r"Forms and advanced inputs",
+            "##",
+            (r"native or authored", r"1 CSS px", r"open popup", r"long option"),
+        ),
+    )
+    for relative, heading, marker, patterns in required_sections:
+        if not section_contains(relative, heading, marker, *patterns):
+            failures.append(f"{relative} section /{heading}/ is missing its single-select contract")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 39), None)
+    if case is None:
+        failures.append("missing eval #39")
+    else:
+        fixture = ROOT / "evals" / "fixtures/native-select-popup-mismatch.tsx"
+        if not fixture.is_file():
+            failures.append("eval #39 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if "<select" not in fixture_text or "<option" not in fixture_text:
+                failures.append("eval #39 fixture no longer reproduces the native-select mismatch")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #39 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
+def date_picker_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"date picker",
+            r"browser.*owned|operating-system.*owned",
+            r"data-entry-patterns\.md",
+        ],
+        "references/data-entry-patterns.md": [
+            r"Date and date-range pickers",
+            r"native.*authored|authored.*native",
+            r"locale pack",
+            r"focus restoration",
+            r"real browser",
+        ],
+        "references/japanese-localization.md": [
+            r"native.*date input|input\[type=.date.\]",
+            r"August",
+            r"YYYY/MM/DD",
+            r"ISO 8601",
+        ],
+        "references/anti-patterns.md": [
+            r"Native date/time picker used when localized popup UI is required",
+            r"date\|time\|month\|week\|datetime-local",
+            r"browser.*owned|operating-system.*owned",
+        ],
+        "references/verification-checklist.md": [
+            r"native.*authored|authored.*native",
+            r"calendar.*locale",
+            r"today.*clear|clear.*today",
+            r"open.*real browser|real browser.*open",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 40), None)
+    if case is None:
+        failures.append("missing eval #40")
+    else:
+        fixture = ROOT / "evals" / "fixtures/native-date-picker-english-leak.tsx"
+        if not fixture.is_file():
+            failures.append("eval #40 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if 'type="date"' not in fixture_text or 'lang="ja"' not in fixture_text:
+                failures.append("eval #40 fixture no longer reproduces the native date-picker leak")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #40 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
+def global_scrollbar_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"global.*scrollbar|scrollbar.*global",
+            r"opt-in|per-container",
+            r"forced.?colors|high-contrast",
+        ],
+        "references/interaction-contract.md": [
+            r"global.*scrollbar|scrollbar.*global",
+            r"opt-in class|per-container opt-in",
+            r"thumb/track",
+            r"forced.?colors|high-contrast",
+        ],
+        "references/anti-patterns.md": [
+            r"Scrollbar theme requires per-container opt-in",
+            r"overflow",
+            r"global",
+        ],
+        "references/verification-checklist.md": [
+            r"global scrollbar baseline",
+            r"new scroll container",
+            r"computed.*scrollbar-color|scrollbar-color.*computed",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 41), None)
+    if case is None:
+        failures.append("missing eval #41")
+    else:
+        fixture = ROOT / "evals" / "fixtures/scrollbar-opt-in-gap.tsx"
+        if not fixture.is_file():
+            failures.append("eval #41 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if "overflow-x-auto" not in fixture_text or "ui-scroll-container" in fixture_text:
+                failures.append("eval #41 fixture no longer reproduces the scrollbar opt-in gap")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #41 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
+def table_form_scroll_ownership_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"scroll ownership|scroll owner",
+            r"table panel|table surface",
+            r"form panel|long form",
+        ],
+        "references/interaction-contract.md": [
+            r"bounded.*table|table.*bounded",
+            r"natural.*height|document scrolling",
+            r"shared.*ancestor|shared.*shell",
+        ],
+        "references/anti-patterns.md": [
+            r"Table viewport sizing leaks into sibling form",
+            r"h-dvh|100vh|overflow-hidden",
+            r"scroll owner",
+        ],
+        "references/verification-checklist.md": [
+            r"table.*form|form.*table",
+            r"scroll owner|scroll ownership",
+            r"200% zoom",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    case = next((item for item in data.get("evals", []) if item.get("id") == 42), None)
+    if case is None:
+        failures.append("missing eval #42")
+    else:
+        fixture = ROOT / "evals" / "fixtures/shared-table-form-fixed-shell.vue"
+        if not fixture.is_file():
+            failures.append("eval #42 fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            required_smells = ["h-dvh", "overflow-hidden", "<form"]
+            if not all(smell in fixture_text for smell in required_smells):
+                failures.append("eval #42 fixture no longer reproduces shared-shell clipping")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append("eval #42 needs a negative oracle and runtime evidence")
+    return not failures, failures
+
+
+def review_gap_regressions() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "references/anti-patterns.md": [
+            r"appearance-none",
+            r"Native datalist used as an authored combobox",
+            r"date\|time\|month\|week\|datetime-local",
+            r"::-webkit-scrollbar.*scrollbar-color.*scrollbar-width",
+            r"h-full.*min-h-screen.*100dvh.*100svh.*height:\s*100%",
+        ],
+        "references/verification-checklist.md": [
+            r"appearance-none",
+            r"datalist.*input\[list\]|input\[list\].*datalist",
+            r"time.*month.*week.*datetime-local",
+            r"WebKit.*scrollbar-color.*scrollbar-width",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    cases = {item.get("id"): item for item in data.get("evals", [])}
+    fixture_smells = {
+        43: ("native-datalist-combobox-gap.tsx", ["<datalist", 'list="customers"']),
+        44: ("native-select-appearance-none.tsx", ["appearance-none", "<select"]),
+        45: (
+            "native-picker-sibling-locale-gap.tsx",
+            ['type="time"', 'type="month"', 'type="week"', 'type="datetime-local"'],
+        ),
+        46: ("webkit-only-scrollbar-gap.css", ["::-webkit-scrollbar", "::-webkit-scrollbar-thumb"]),
+        47: ("shared-shell-height-variants.vue", ["h-full", "min-h-screen", "height: 100%", "<table", "<form"]),
+    }
+    for case_id, (fixture_name, smells) in fixture_smells.items():
+        case = cases.get(case_id)
+        if case is None:
+            failures.append(f"missing eval #{case_id}")
+            continue
+        fixture = ROOT / "evals" / "fixtures" / fixture_name
+        if not fixture.is_file():
+            failures.append(f"eval #{case_id} fixture is missing")
+        else:
+            fixture_text = fixture.read_text(encoding="utf-8")
+            if not all(smell in fixture_text for smell in smells):
+                failures.append(f"eval #{case_id} fixture no longer reproduces its review gap")
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append(f"eval #{case_id} needs a negative oracle and runtime evidence")
+
+    return not failures, failures
+
+
+def canonical_project_audit_contract() -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    required = {
+        "SKILL.md": [
+            r"Canonical UI Resolution Gate",
+            r"audit_project\.py.*--mode strict",
+            r"screen-local implementation",
+            r"loading indicator/spinner by default",
+            r"Persist committed search.*page size in URL",
+        ],
+        "references/canonical-ui-resolution.md": [
+            r"Capability.*Canonical owner.*Source of truth.*Allowed variants.*Verification",
+            r"business/domain/API contract",
+            r"never executes them",
+        ],
+        "assets/UX-CONTRACT.template.md": [
+            r"Table Selection",
+            r"Select/Listbox",
+            r"CRUD full-flow evidence",
+        ],
+        "references/verification-checklist.md": [
+            r"Mandatory project audit sequence",
+            r"failure-path",
+            r"static auditor does not execute",
+            r"Required accessibility baseline",
+            r"Recommended extended verification",
+        ],
+        "references/interaction-contract.md": [
+            r"aria-invalid=.true.",
+            r"visual viewport and safe-area bounds",
+            r"Skeletons are optional",
+        ],
+    }
+    for relative, patterns in required.items():
+        for pattern in patterns:
+            if not contains(relative, pattern):
+                failures.append(f"{relative} missing /{pattern}/")
+
+    data = json.loads(read("evals/evals.json"))
+    cases = {item.get("id"): item for item in data.get("evals", [])}
+    fixtures = {
+        48: ("canonical-owner-drift.vue", ["<select", 'href="#"']),
+        49: ("scrollbar-opt-in.css", [".custom-scrollbar", "::-webkit-scrollbar-thumb"]),
+        50: ("crud-failure-gap.md", ["happy paths", "not specified"]),
+        53: ("default-loading-spinner.vue", ["AppSpinner", "min-h-80"]),
+        55: ("textarea-resize-and-label-gap.vue", ["<textarea", 'aria-invalid="true"']),
+        56: ("responsive-dialog-gap.vue", ["h-[900px]", 'role="dialog"']),
+    }
+    for case_id in range(48, 58):
+        case = cases.get(case_id)
+        if case is None:
+            failures.append(f"missing eval #{case_id}")
+            continue
+        if not case.get("negative_oracle") or not case.get("evidence_required"):
+            failures.append(f"eval #{case_id} needs a negative oracle and runtime evidence")
+        if case_id in fixtures:
+            fixture_name, smells = fixtures[case_id]
+            fixture = ROOT / "evals" / "fixtures" / fixture_name
+            if not fixture.is_file():
+                failures.append(f"eval #{case_id} fixture is missing")
+            else:
+                fixture_text = fixture.read_text(encoding="utf-8")
+                if not all(smell in fixture_text for smell in smells):
+                    failures.append(f"eval #{case_id} fixture no longer reproduces its project-audit gap")
+    return not failures, failures
+
+
 def report(name: str, status: bool, failures: list[str] | None = None) -> bool:
     print(f"  {'PASS' if status else 'FAIL'}: {name}")
     for failure in failures or []:
@@ -196,6 +528,30 @@ def main() -> int:
     all_ok &= report("Independent market/locale/content routing", status, failures)
     status, failures = japan_eval_proof()
     all_ok &= report("Claim matrix, negative oracles, evidence, and fixtures", status, failures)
+
+    print("\nSingle-select popup structural proof")
+    status, failures = single_select_contract()
+    all_ok &= report("Native/authored decision, geometry, anti-pattern, and eval", status, failures)
+
+    print("\nDate-picker locale structural proof")
+    status, failures = date_picker_contract()
+    all_ok &= report("Native/authored decision, Japanese locale, anti-pattern, and eval", status, failures)
+
+    print("\nGlobal scrollbar structural proof")
+    status, failures = global_scrollbar_contract()
+    all_ok &= report("Global baseline, no opt-in gap, forced colors, and eval", status, failures)
+
+    print("\nTable/form scroll-ownership structural proof")
+    status, failures = table_form_scroll_ownership_contract()
+    all_ok &= report("Table viewport sizing remains scoped away from forms", status, failures)
+
+    print("\nReview-gap regression proof")
+    status, failures = review_gap_regressions()
+    all_ok &= report("Datalist, utility, picker, engine, and height variants", status, failures)
+
+    print("\nCanonical UI project-audit proof")
+    status, failures = canonical_project_audit_contract()
+    all_ok &= report("Resolution, reuse, static audit, and runtime boundary", status, failures)
 
     print(
         "\nBoundary: PASS proves repository wiring only; browser behavior, native-copy "

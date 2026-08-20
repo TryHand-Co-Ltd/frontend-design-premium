@@ -49,11 +49,13 @@ Never use browser `confirm()`. Do not put the safe and dangerous actions next to
 
 | Wait type | Default |
 |---|---|
-| Initial page/data load | Skeleton matching final geometry; use spinner only when shape is unknowable |
-| Table page/filter change | Keep headers and container stable; show row skeleton/overlay; prevent stale overwrite |
+| Initial page/data load | App-owned loading indicator/spinner in a stable reserved region |
+| Table page/filter change | Keep headers and container stable; show an app-owned loading indicator/overlay; prevent stale overwrite |
 | Button mutation | Keep label width/height stable; busy indicator; prevent duplicate activation |
 | Background refresh | Preserve usable content; subtle progress/status; do not blank the screen |
 | Very fast local operation | Avoid flashing a loader; use a short threshold before showing it |
+
+Skeleton is optional. Use it only when the prompt, business requirement, or canonical project contract explicitly asks for skeleton treatment. A spinner is acceptable by default, including for initial page and table loading, provided it reserves compatible geometry, remains perceivable, cannot become indefinite, and cannot be cleared or overwritten by stale work.
 
 ## Mutation feedback
 

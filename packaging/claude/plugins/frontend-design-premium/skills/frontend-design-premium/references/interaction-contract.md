@@ -2,6 +2,19 @@
 
 Use the sections relevant to the components being changed. This reference expands the foundational invariants in `SKILL.md`; project conventions may refine visuals but should not weaken behavior. For composite/advanced controls also read `data-entry-patterns.md`; for navigation/responsive shells read `navigation-layout.md`; for offline, optimistic, session, conflict, and system feedback read `async-resilience.md`.
 
+## Canonical capability ownership
+
+Resolve the owner for every applicable capability before implementation; see `canonical-ui-resolution.md`. A screen must consume the shared owner or a business-named variant, not recreate equivalent behavior locally.
+
+- **Table Selection:** define select-page versus select-all-results scope, selected count, filter/sort/pagination effects, keyboard operation, bulk-action availability, mutation confirmation, and post-action focus. Never change scope silently.
+- **Select/Listbox:** record native or authored ownership. Native is valid only when platform-owned popup geometry and behavior are accepted; otherwise reuse an accessible authored shared primitive.
+- **Date:** record typed, native, or authored ownership. Default Japanese policy is `ja-JP` with Gregorian display unless requirements say otherwise; store date-only values without timezone conversion. Authored pickers own keyboard, focus restoration, bounded scrolling, and viewport collision.
+- **Form:** standardize `noValidate`, validation timing, inline association, API field errors, form-level recovery, first-invalid focus, duplicate-submit prevention, unsaved changes, and preservation of non-sensitive values.
+- **Scrollbar:** apply tokenized standards properties and engine fallbacks globally to product-owned scroll surfaces. Classes express geometry/semantic exceptions, never activate the base theme.
+- **Toast:** use one localized live-region provider with deduplication, stable placement, semantic tone, and action-aligned vocabulary. Never expose raw backend errors or replace actionable inline errors.
+- **CRUD:** make the UX contract authoritative for navigation, list-state restoration, pending state, feedback, confirmation strength, failure recovery, and focus outcome.
+- **Async resilience:** cancel/invalidate stale list work, prevent older requests from clearing newer pending state, block duplicate mutations, preserve form/dialog context on failure, expose retry, and keep destructive dialogs open until server confirmation.
+
 ## Interactive controls
 
 For every control verify:
@@ -60,6 +73,17 @@ Requirements:
 - For cursor APIs, do not fake arbitrary page numbers unless the backend supports stable random access.
 - Load-more preserves current items and appends once; guard double activation.
 - Infinite scroll needs an accessible/manual alternative, loading announcement, state restoration, and virtualization for large DOMs.
+
+### Viewport-sized table regions and scroll ownership
+
+Treat “make the table sync with the screen” as a table-surface requirement, not a page-shell rewrite.
+
+- Name one vertical scroll owner for each active layout mode. A bounded table panel may own an internal `overflow: auto` region; a sibling long form normally keeps natural block height and document scrolling.
+- End the table's `display: flex` / `min-height: 0` chain at the table panel or a table-specific wrapper. Do not add `100vh`, `h-dvh`, fixed height, or `overflow: hidden` to a shared page, shared tab shell, or route ancestor solely to size the table.
+- If the application already has a canonical viewport shell and content scroller, preserve it. Let the form content remain natural-height inside that established scroller; do not create a second nested form scroller.
+- Keep table toolbar and pagination in the table frame while the row viewport scrolls. Changing page size may change scroll height, never the frame footprint.
+- On tab switches, reset panel-specific height and overflow rules. An inactive table panel must not leave clipping or fixed-height constraints on the active form panel.
+- At short viewports, every form field, validation message, and action must remain reachable. Apply the same check at 200% zoom when extended zoom verification is required. Sticky form actions may remain sticky, but they do not make the form body fixed.
 
 ### Row states and actions
 
@@ -120,9 +144,10 @@ Test slow response ordering: type query A, then B; A must never overwrite B.
 ## Forms and validation
 
 - Add `novalidate`/`noValidate` to product forms to suppress browser-owned message bubbles.
+- Give every native input, select, and textarea a real accessible label through matching `for`/`id` or a wrapping label. Clicking a visible label must focus or activate its control; authored fields must provide an equivalent accessible name.
 - Keep correct `type`, `inputmode`, `autocomplete`, `required`, and length/format metadata when useful; app/schema validation remains source of UI truth.
 - Validate at a humane time: usually submit, then on change/blur for fields already in error. Avoid shouting during initial typing.
-- On invalid submit, show a summary for long forms, inline text for each field, associate via `aria-describedby`, set invalid state, and focus/scroll the first error.
+- On invalid submit, show a summary for long forms, inline text for each field, set `aria-invalid="true"`, reference an existing help/error element via `aria-describedby`, and focus/scroll the first error.
 - Preserve non-sensitive entered data after server errors.
 - Map server field errors to fields and global failures to persistent form-level status.
 - Prevent double submit and stale mutation completion after unmount/navigation.
@@ -149,6 +174,7 @@ Set `resize: none`. Provide enough rows and either auto-grow within a sensible c
 - The sticky bar should have a background to avoid content transparency. Do not use `pointer-events: none` or overlay traps.
 - For mobile, keep the bar attached to the bottom of the form (not the viewport) so it does not cover content when the keyboard is open. Detect `visualViewport` height changes to toggle between sticky and static.
 - On validation error, scroll to the first invalid field — the sticky bar remains visible.
+- Keep the form body in natural flow. Scope any bounded scrolling to the application's established content scroller; never inherit the table panel's fixed-height or `overflow: hidden` contract.
 
 ### Unsaved changes guard
 
@@ -174,6 +200,15 @@ Required behavior:
 - scroll lock does not change page width;
 - nested dialogs are avoided;
 - mobile layout remains usable with keyboard and zoom.
+
+Responsive modal/dialog behavior:
+
+- keep the surface within visual viewport and safe-area bounds;
+- constrain long content with an internal body scroller while title, close affordance, and actions remain reachable;
+- avoid fixed dimensions that overflow short or narrow viewports;
+- ensure the virtual keyboard does not cover the active field or required action;
+- allow a canonical mobile full-screen dialog/sheet variant for long edit forms, while keeping short delete confirmations compact;
+- treat a deliberately non-modal/persistent drawer as a separate documented variant: no modal semantics or inert background, and no focus trap unless its own canonical contract requires one.
 
 For destructive confirmation:
 
@@ -260,8 +295,10 @@ Keep the component footprint stable when moving among these states.
 
 ## Scroll containers
 
-- Style only scrollbars the product owns, not every browser surface indiscriminately.
-- Define tokenized thumb/track, hover/active, and dark/light/high-contrast behavior.
+- Establish the product's global scrollbar baseline once in the application stylesheet. Every new scroll container in that application document receives the theme without a per-container opt-in class.
+- Scope the global baseline to surfaces the product owns. Do not attempt to style browser chrome, cross-origin frames, or embedded third-party documents.
+- Define tokenized thumb/track, hover/active, and dark/light/high-contrast/forced-colors behavior. In forced colors, allow the platform to preserve system contrast when required.
+- Use a component-level scrollbar class only for a documented geometry or semantic exception such as stable gutter, compact density, or an intentionally distinct surface—not to activate the base colors.
 - Keep enough width and contrast to perceive and operate; never set `scrollbar-width: none` for scrollable content without an equivalent visible control.
 - Use `scrollbar-color`/`scrollbar-width` and compatible `::-webkit-scrollbar*` styling as required by browser support.
 - Use `scrollbar-gutter: stable` for classic-scrollbar layout stability.
@@ -283,7 +320,7 @@ Coordinate transition behavior across screens so the product feels intentional r
 
 | Surface type | Recommended treatment | Rationale |
 |---|---|---|
-| Same-app SPA navigation | Staggered content fade-in (200 ms, `ease-out`) with skeleton placeholders preserving geometry | Content arrives incrementally; no layout shift |
+| Same-app SPA navigation | Stable app-owned loading indicator by default; optional skeleton only when explicitly selected | Content arrives without layout shift |
 | Full page reload / MPA | Browser-native load, no custom overlay | Custom load screens add latency to perceived performance and break browser UI expectations |
 | Wizard / multi-step form | Slide content horizontally (250 ms, cubic-bezier) only when direction has meaning; otherwise opacity cross-fade | Directional slide communicates forward/backward progress but can feel busy in a tool context |
 | Modal / dialog | See Dialog section below | — |
@@ -361,7 +398,9 @@ Use the `<AnimatePresence>` / `TransitionGroup` pattern for exit animations so r
 </AnimatePresence>
 ```
 
-### Skeleton loading animation
+### Optional skeleton loading animation
+
+The default loading treatment is an app-owned loading indicator/spinner in a stable reserved region. Skeletons are optional and are used only when the prompt, business requirement, or canonical project contract explicitly selects them.
 
 | Style | Character | When to use |
 |-------|-----------|------------|
@@ -413,7 +452,7 @@ Use the `<AnimatePresence>` / `TransitionGroup` pattern for exit animations so r
 Reserve geometry for:
 
 - images/video via dimensions or `aspect-ratio`;
-- skeletons that match final rows/cards;
+- app-owned spinner/loader regions and, when explicitly selected, skeletons that match final rows/cards;
 - field help/error slots where practical;
 - adornments, spinners, and validation icons;
 - scrollbar gutters;
@@ -431,13 +470,19 @@ Async rules:
 
 ## Responsive and input diversity
 
-Test at minimum:
+Required baseline:
 
 - keyboard only;
-- touch/no hover;
-- 200% zoom or equivalent reflow;
-- narrow phone and small laptop;
+- native or authored control keyboard semantics, visible focus, and accessible names;
+- modal focus containment/dismissal and authored composite-widget keyboard behavior;
+- narrow viewport behavior needed by the project's supported layout;
 - long localized text and large dynamic values;
 - reduced motion and high contrast where supported;
 - slow network, offline/failure, empty and large datasets;
 - session expiry, stale/conflicting data, and long localized values when applicable.
+
+Recommended extended verification unless the project accessibility/platform contract makes it mandatory:
+
+- touch/no-hover and touch-target measurement;
+- a full 200% zoom/reflow matrix;
+- cross-device mobile touch and virtual-keyboard coverage.

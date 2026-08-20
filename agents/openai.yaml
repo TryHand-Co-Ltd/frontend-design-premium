@@ -1,4 +1,4 @@
 interface:
   display_name: "Frontend Design Premium"
-  short_description: "Production UX contracts for frontend apps"
-  default_prompt: "Use $frontend-design-premium with the upstream frontend-design skill to build or review this application UI with durable design context, consistent interaction behavior, accessibility, localization, and resilient states."
+  short_description: "Canonical UI ownership and production UX contracts"
+  default_prompt: "Use $frontend-design-premium with the upstream frontend-design skill. Resolve the Canonical UI Map and reuse shared owners before implementation, then run the static project audit and separate project-owned runtime verification."

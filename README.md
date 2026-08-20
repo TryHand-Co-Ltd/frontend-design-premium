@@ -51,7 +51,7 @@ python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
   dist/codex-marketplace/plugins/frontend-design-premium
 ```
 
-The generated review archive is written to `dist/frontend-design-premium-codex-1.3.0.zip`.
+The generated review archive is written to `dist/frontend-design-premium-codex-1.4.0.zip`.
 It bundles the tested upstream `frontend-design` snapshot and verifies its recorded digest during every build. See [`packaging/codex/README.md`](packaging/codex/README.md) for local marketplace testing.
 
 #### Claude Code
@@ -122,7 +122,7 @@ Restart the harness if it does not support live skill discovery.
 
 | Command | What it does |
 |---------|-------------|
-| `python scripts/install.py --version` | Print skill version (`v1.3.0`) |
+| `python scripts/install.py --version` | Print skill version (`v1.4.0`) |
 | `python scripts/install.py --check` | Compare source version against each installed target |
 | `python scripts/install.py --list-targets` | Show install status per harness (link type + version) |
 | `python scripts/install.py --target agents` | Install to `.agents/skills/` (default) |
@@ -284,20 +284,36 @@ frontend-design-premium/
 │   │   ├── a1-b1-consistency.tsx
 │   │   ├── audit-records-mobile.tsx
 │   │   ├── broken-admin-table.tsx
+│   │   ├── canonical-owner-drift.vue
+│   │   ├── crud-failure-gap.md
+│   │   ├── default-loading-spinner.vue
 │   │   ├── destructive-delete-row.tsx
 │   │   ├── jp-onboarding-wizard.tsx
 │   │   ├── jp-ime-autosave.tsx
 │   │   ├── japan-checkout.tsx
 │   │   ├── marketing-hero.tsx
+│   │   ├── native-datalist-combobox-gap.tsx
+│   │   ├── native-date-picker-english-leak.tsx
+│   │   ├── native-picker-sibling-locale-gap.tsx
+│   │   ├── native-select-appearance-none.tsx
+│   │   ├── native-select-popup-mismatch.tsx
 │   │   ├── overlay-stack-chaos.tsx
 │   │   ├── parse-json-logs.py
 │   │   ├── profile-edit-form.tsx
-│   │   └── role-gated-actions.tsx
+│   │   ├── responsive-dialog-gap.vue
+│   │   ├── role-gated-actions.tsx
+│   │   ├── scrollbar-opt-in-gap.tsx
+│   │   ├── scrollbar-opt-in.css
+│   │   ├── shared-shell-height-variants.vue
+│   │   ├── shared-table-form-fixed-shell.vue
+│   │   ├── textarea-resize-and-label-gap.vue
+│   │   └── webkit-only-scrollbar-gap.css
 │   ├── golden-test-report.md
 ├── references/
 │   ├── anti-patterns.md              # Grep-able violations + how to fix
 │   ├── async-resilience.md
 │   ├── auth-patterns.md              # Sign-in/sign-up, session, OAuth, route protection
+│   ├── canonical-ui-resolution.md    # Canonical owner map + project audit contract
 │   ├── consistency-migration.md
 │   ├── consistency-system.md
 │   ├── data-entry-patterns.md
@@ -316,10 +332,12 @@ frontend-design-premium/
 │   ├── llm-streaming.md              # Streaming chat, SSE, abort, message display
 │   ├── navigation-layout.md
 │   ├── permission-ui.md              # Hide/disable/403, clipboard copy, role access
+│   ├── pilot-review.md
 │   ├── research-sources.md
 │   ├── token-mapping.md
 │   └── verification-checklist.md
 └── scripts/
+    ├── audit_project.py
     ├── build_claude_plugin.py
     ├── build_codex_plugin.py
     ├── check_eval_fixtures.py

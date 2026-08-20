@@ -24,7 +24,10 @@ Read this when the product locale is Japanese or when changing Japanese input, d
 
 - Follow the product's explicit date format. `YYYY/MM/DD` is common in Japanese products, but storage and parsing must never depend on a display string. Store as ISO 8601 (`YYYY-MM-DD`) or a typed `Date` object.
 - Keep display format separate from storage format. The backend and database use a fixed canonical format; the frontend formats via `Intl.DateTimeFormat` or the chosen date library.
+- A native date input (`input[type="date"]`) has a browser/operating-system-owned popup. `lang="ja"`, a Japanese page, and a formatted closed value do not guarantee Japanese month names, weekdays, or actions in that popup.
+- Use native date input only when platform-owned locale behavior is explicitly accepted for every supported browser/OS. When Japanese calendar UI is a product requirement, use a maintained authored date-picker with the complete `ja-JP` locale pack.
 - Localize month/day labels, navigation buttons, today/clear/apply/cancel labels, input hints, and screen-reader announcements.
+- For an authored Japanese calendar, verify representative open-state copy such as `2026年8月`, `日 月 火 水 木 金 土`, `前の月`, `次の月`, `今日`, and `クリア`; reject fallback English such as `August`, `Clear`, or `Today`.
 - Use a calendar/date-picker with keyboard support, visible focus, selected/today distinction, and focus restoration.
 - Confirm the first day of week and holiday/business-day requirements from the chosen date library/product contract; do not assume from language alone.
 - Distinguish date-only values from instants. A birthday or business date must not shift because of timezone conversion.

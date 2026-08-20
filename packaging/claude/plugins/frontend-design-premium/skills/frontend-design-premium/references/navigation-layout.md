@@ -24,6 +24,7 @@ Use tabs for peer views of the same context. Use links/navigation when each dest
 - Make overflow obvious: horizontal scrolling with controls or an accessible overflow menu. Preserve the active tab in view.
 - Put route-backed tab state in the URL when Back, refresh, sharing, or deep linking matters.
 - The underline, pill, icon, and spacing treatment belong to `DESIGN.md`; do not invent a new visual variant per screen.
+- Give each tab panel its own height and overflow contract. A viewport-bounded table panel must not force a sibling long-form panel into the same fixed-height or internal-scroll model; switching tabs must restore the active panel's intended scroll owner.
 
 ## Sidebar, navigation drawer, and mobile bottom sheet
 

@@ -4,12 +4,12 @@ description: Production UX and durable design-context layer that must be used to
 metadata:
   compatibility: Requires the separately installed frontend-design Agent Skill. Python 3 is optional for bundled resolver and validation scripts.
   author: frontend-design-premium contributors
-  version: "1.3.0"
+  version: "1.4.0"
   upstream-skill: frontend-design
   upstream-tested:
     revision: "2026-02 — initial compatibility"
     digest: "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
-    tested-with-premium: "1.3.0"
+    tested-with-premium: "1.4.0"
   compatibility-policy:
     strict-on-release: true
     warn-on-untested: true
@@ -49,6 +49,12 @@ Before reading any reference, classify the target:
 If the brief mixes both (landing + admin), treat each route group by its register. The authenticated/admin section follows the full premium contract; the marketing shell follows upstream with premium polish only.
 
 Apply this gate once at the start. Revisit only when the brief pivots between registers.
+
+## 0aa. Canonical UI Resolution Gate
+
+For product/admin work, read `references/canonical-ui-resolution.md` before implementation. Inspect the current stack, locale provider, maintained `DESIGN.md` and `UX-CONTRACT.md`, runtime tokens, shared primitives, and a relevant sibling workflow; then resolve every applicable row in the Canonical UI Map. An unresolved canonical owner or high-risk behavior blocks implementation for that capability.
+
+If an owner exists, reuse or extend it through a business-named variant. Do not add an equivalent screen-local implementation. When no reusable owner exists and the behavior will recur, create one shared primitive and record the decision. Do not rewrite a contract merely to legitimize existing drift.
 
 ## 0b. Japan-market gate
 
@@ -143,6 +149,7 @@ When no high-risk category is affected and the user says "just do it" or provide
 - Successful edit: follow the canonical sibling edit flow; if none exists, return to the owning list.
 - Destructive or hard-to-reverse action: app-owned confirmation dialog; offer Undo when technically honest.
 - Search request debounce: 300 ms, IME-safe, with stale-request cancellation.
+- Loading treatment: use an app-owned loading indicator/spinner by default; use skeletons only when the prompt, business requirement, or canonical project contract asks for them.
 - Accessibility target: WCAG 2.2 AA.
 
 Read `references/decision-matrix.md` when choosing pagination/load-more/infinite-scroll, save destinations, confirmation strength, or loading treatment.
@@ -159,8 +166,10 @@ When a difference is intentional, encode it as an explicit variant with a busine
 
 Every non-trivial data table needs a deliberate dataset-navigation strategy. Do not ship an unbounded table.
 
+Assign scroll ownership before applying viewport sizing. A request to make a table fill the remaining screen applies to the table panel or table surface only; it does not authorize `100vh`/`h-dvh`, fixed height, or `overflow: hidden` on a shared page, tab shell, or ancestor merely to make the table fit. When sibling panels contain a long form, preserve that form panel's established natural-height/document-scrolling behavior unless the application already has a canonical content scroller. Bound the table through its own complete flex/min-height chain and keep its overflow internal. Treat each tab panel as an independent layout mode and verify every sibling after switching tabs.
+
 - Prefer native semantic `<table>` for read-oriented tabular data; use an ARIA grid only for genuinely spreadsheet-like keyboard interaction.
-- Keep filtering, sorting, page/cursor, page size, and selection behavior coherent and restorable. Put shareable state in the URL when architecture allows.
+- Keep filtering, sorting, page/cursor, page size, and selection behavior coherent and restorable. Persist committed search, active filters, sort, page, and page size in URL search parameters by default. `UX-CONTRACT.md` may override this for transient, sensitive, non-shareable, or architecture-constrained state.
 - Reset or clamp paging after filter changes and deletion; never strand users on an empty out-of-range page.
 - Provide loading, empty, no-results, partial-error, and total/range states without changing the table's footprint unexpectedly.
 - Make sortable headers real buttons with hover, focus, active, and `aria-sort` behavior.
@@ -176,19 +185,19 @@ Anything clickable must look and behave clickable:
 
 ### Scrollbars and layout stability
 
-Style authored scroll containers to fit the project's token system, including thumb, track, hover, and high-contrast behavior. Keep the scrollbar usable; never hide it merely for aesthetics. Use standards-based properties plus engine fallbacks only as needed. Reserve scrollbar space with `scrollbar-gutter: stable` where appearance could shift layout.
+Define one global scrollbar baseline in the application stylesheet for every scrollable surface the product owns. Tokenize thumb, track, hover, active, and high-contrast/forced-colors behavior; use standards-based properties plus engine fallbacks. The visual theme must not require a per-container opt-in class—new overflow regions inherit it automatically. Use component classes only for documented geometry exceptions such as `scrollbar-gutter: stable`, density, or a deliberately different semantic surface. Keep scrollbars visible and operable; never hide them merely for aesthetics. Scope the baseline to the application document, not browser chrome, cross-origin frames, or embedded third-party documents.
 
 The layout must not jump, reflow unexpectedly, or move controls during loading and feedback:
 
-- reserve image/media, async content, error/help text, scrollbar, and skeleton space;
-- keep skeleton and final content dimensions compatible;
+- reserve compatible geometry for image/media, async content, error/help text, scrollbars, and the chosen loading indicator;
+- keep spinner/loader regions stable; when skeletons are explicitly chosen, match the final content geometry;
 - keep buttons the same size while busy—replace or overlay content instead of widening labels;
 - avoid font swaps and late banners that move primary controls;
 - anchor overlays and popovers without affecting document flow.
 
 ### Dialogs, confirmations, and feedback
 
-Never call browser `alert()`, `confirm()`, or `prompt()` for product UI. Use app-owned, accessible dialog/alert-dialog primitives with focus placement, focus trap/inert background, Escape behavior, accessible title/description, and focus restoration.
+Never call browser `alert()`, `confirm()`, or `prompt()` for product UI. Use app-owned, accessible modal dialog/alert-dialog primitives with focus placement, focus trap/inert background, Escape behavior, accessible title/description, and focus restoration. A deliberately non-modal or persistent drawer may use a documented canonical variant without focus trapping; it must not be presented as modal.
 
 Confirm destructive, irreversible, privacy-sensitive, permission-changing, bulk, or costly actions. Name the object and consequence; label the action with the real verb (`Delete`, not `OK`). Initially focus the least destructive action when consequences are serious. Require typed confirmation only for rare, high-impact irreversible operations. Do not create confirmation fatigue for routine reversible saves.
 
@@ -213,8 +222,10 @@ Do not communicate intent by color alone. Keep icon, label, focus ring, contrast
 ### Forms and sensitive values
 
 - Put `novalidate`/`noValidate` on product forms and own the validation experience. Do not invoke native validation bubbles with `reportValidity()`.
+- For every single-select dropdown, explicitly choose native or authored behavior. Keep a native `<select>` only when an operating-system-owned popup is acceptable; when popup width, border, radius, spacing, or collision behavior is part of the visual contract, use the project's maintained accessible Select/Listbox primitive and follow `references/data-entry-patterns.md`.
+- For every date picker, explicitly choose native or authored behavior. Keep native `input[type="date"]` only when a browser/operating-system-owned popup—including its locale, labels, geometry, and accessibility behavior—is acceptable on every supported platform. When the product must own calendar language or interaction, use the project's maintained accessible date-picker primitive and follow `references/data-entry-patterns.md`.
 - Keep semantic types and useful constraint metadata where they aid keyboards, autofill, parsing, or app validation; disabling browser UI does not mean discarding semantics.
-- Show errors in text, associate them with fields, preserve entered values, focus/scroll to the first invalid field on submit, and include a correction hint.
+- Show errors in text, associate them with fields, preserve entered values, focus/scroll to the first invalid field on submit, and include a correction hint. Native fields use a real label association; invalid fields expose `aria-invalid="true"` and reference existing help/error content with `aria-describedby`.
 - Prevent duplicate submit. During submit, preserve button dimensions and make busy state perceivable.
 - Set `resize: none` on textareas. Compensate with sufficient default height and auto-grow or an alternate expansion affordance when long input is expected.
 - Password, token, API key, secret, and equivalent inputs are masked by default. Add a keyboard-accessible show/hide button with changing accessible label/state. Use the correct password/autocomplete semantics and never place secrets in URLs, analytics, logs, toast text, or persistent client storage without an explicit security design.
@@ -224,7 +235,7 @@ Do not communicate intent by color alone. Keep icon, label, focus ring, contrast
 
 Every search field has an explicit clear (`X`) button when non-empty. The button is keyboard accessible, has a localized accessible label, clears immediately, cancels pending work, refreshes results correctly, and returns focus to the input.
 
-Debounce remote search (300 ms default), but do not delay local clearing or explicit Enter submission. Do not fire while IME composition is active; run after composition ends. Cancel superseded requests or ignore stale responses so older results cannot overwrite newer ones. Reflect a committed query in route state when users need Back/Forward or shareable results.
+Debounce remote search (300 ms default), but do not delay local clearing or explicit Enter submission. Do not fire while IME composition is active; run after composition ends. Cancel superseded requests or ignore stale responses so older results cannot overwrite newer ones. Persist a committed query in URL state by default together with applicable filters, sort, page, and page size; allow a documented business override for transient, sensitive, non-shareable, or architecture-constrained state.
 
 ### Locale and Japanese products
 
@@ -234,7 +245,7 @@ For Japanese UI, use `ja-JP` and an explicit domain timezone (often `Asia/Tokyo`
 
 ### Accessibility and responsive behavior
 
-Target WCAG 2.2 AA. Preserve native semantics, keyboard operation, visible focus, sufficient contrast, reduced motion, zoom/reflow, screen-reader names/status, and practical touch targets. Focus must not be obscured by sticky UI or virtual keyboards. Every drag interaction needs a non-drag alternative, and authentication must allow password managers and paste. Icon-only controls require accessible names and tooltips when the icon is not universally understood. Test no-hover, keyboard-only, narrow viewport, long text, empty data, slow network, and reduced motion.
+Target WCAG 2.2 AA. The required baseline is native semantics, accessible names/status, visible focus, sufficient contrast, and the standard keyboard behavior of native or authored interactive components. Focus must not be obscured by sticky UI or virtual keyboards. Every drag interaction needs a non-drag alternative, and authentication must allow password managers and paste. Icon-only controls require accessible names and tooltips when the icon is not universally understood. Touch-target measurement, cross-device touch testing, and a full 200% zoom matrix are recommended unless the project accessibility/platform contract makes them mandatory.
 
 ### Advanced and conditional patterns
 
@@ -250,13 +261,14 @@ Read references only when relevant. References are grouped into **core** (always
 
 ### Core (always relevant for product/admin apps)
 
+- `references/canonical-ui-resolution.md` — mandatory pre-implementation ownership/reuse gate, project manifest, and audit contract.
 - `references/anti-patterns.md` — grep-able violations to search during verification.
 - `references/design-context-lifecycle.md` — DESIGN.md scan/seed/reconcile/lint/diff behavior.
 - `references/token-mapping.md` — DESIGN.md-to-CSS/Tailwind/theme ownership, adapters, exports, drift gates.
 - `references/consistency-migration.md` — inventory, canonicalization, risk-prioritized rollout, enforcement, legacy retirement.
 - `references/interaction-contract.md` — foundational controls, forms, tables, overlays, toasts, state behavior.
 - `references/navigation-layout.md` — breadcrumbs, tabs, navigation shells, responsive tables, truncation, shortcuts, menus, print.
-- `references/data-entry-patterns.md` — bulk selection, upload, combobox, date range, inline edit, disclosures, steppers, sliders, chips, drag, filter chips, density.
+- `references/data-entry-patterns.md` — read for forms containing a single-select/select dropdown, combobox/autocomplete, advanced input, bulk workflow, direct manipulation, or density control.
 - `references/async-resilience.md` — optimistic work, drafts, offline, conflict, session expiry, progress, alerts, audit logs.
 - `references/consistency-system.md` — multi-screen flows, shared primitives, behavior ledger.
 - `references/decision-matrix.md` — product-choice defaults and escalation questions.
@@ -284,13 +296,14 @@ Always read and run through `references/verification-checklist.md` before declar
 
 At minimum:
 
-1. Confirm `DESIGN.md` was read or appropriately created/reconciled; lint it after changes, verify the documented runtime token mapping, and inspect drift against generated/adapted tokens and shared components.
-2. Run the repository's formatter, typecheck, tests, and build that cover the change.
-3. Exercise the changed workflow in a real browser when available, including success, failure, loading, empty/no-results, keyboard, and one narrow viewport.
-4. Compare the result with at least one sibling screen for visual language, navigation, feedback, labels, and state behavior.
-5. Exercise applicable offline, stale/conflict, session, locale/theme, long-content, and reduced-motion states rather than testing only the happy path.
-6. Search changed code for the grep-able violations catalogued in `references/anti-patterns.md` — native dialogs, uncancelled search races, non-semantic click targets, missing states, screen-local duplicates, and other common issues. Every match is a bug; fix all of them.
-7. Add or update component-state stories, interaction/accessibility tests, and visual regression coverage when the repository supports them.
-8. Fix failures and repeat verification.
+1. Run `python <this-skill-dir>/scripts/audit_project.py <project-root> --mode strict`, fix blocking findings, and keep its JSON output as static evidence. The audit never substitutes for project-owned runtime checks.
+2. Confirm `DESIGN.md` was read or appropriately created/reconciled; lint it after changes, verify the documented runtime token mapping, and inspect drift against generated/adapted tokens and shared components.
+3. Run the repository's formatter, typecheck, tests, build, and every command configured in `premium-ui.json`; report actual results rather than inferring them from static inspection.
+4. Exercise the changed workflow in a real browser when available, including success, failure, loading, empty/no-results, keyboard, one narrow viewport, and the open state of any select/listbox popup.
+5. Compare the result with at least one sibling screen for visual language, navigation, feedback, labels, and state behavior.
+6. Exercise applicable offline, stale/conflict, session, locale/theme, long-content, and reduced-motion states rather than testing only the happy path.
+7. Search changed code for the grep-able violations catalogued in `references/anti-patterns.md` — native dialogs, uncancelled search races, non-semantic click targets, missing states, screen-local duplicates, and other common issues. Every match is a bug; fix all of them.
+8. Add or update component-state stories, interaction/accessibility tests, and visual regression coverage when the repository supports them.
+9. Fix failures and repeat verification.
 
 Report only: what changed, any business decision made, verification run, and unresolved risk. Keep the narration short; a minimal implementation request should still produce a production-ready result.

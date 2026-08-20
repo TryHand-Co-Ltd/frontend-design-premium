@@ -39,6 +39,20 @@ Record the authoritative sources that ground the UI behavior in this contract. D
 
 Keep visual rationale and token values in `DESIGN.md`; do not duplicate them here.
 
+## Canonical UI Map
+
+Complete only applicable rows. An unresolved owner blocks implementation for that capability. Native/typed variants are valid only when product ownership is explicitly accepted.
+
+| Capability | Canonical owner | Source of truth | Allowed variants | Verification |
+|---|---|---|---|---|
+| Table Selection | | | page / all-results | component + E2E |
+| Select/Listbox | | | native / authored | keyboard + popup |
+| Date | | | typed / native / authored | locale + keyboard + E2E |
+| Form | | | create / edit | validation E2E |
+| Scrollbar | | | geometry exceptions | computed style |
+| Toast | | | success / warning / info / error | live-region test |
+| CRUD | | | return / stay | full-flow E2E |
+
 ## Component behavior
 
 | Component | Default | Hover | Focus | Active | Disabled | Busy | Error |
@@ -55,10 +69,11 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 
 - Admin tables:
 - Exploratory lists:
-- URL state:
+- URL state (default: committed search, filters, sort, page, and page size; record any transient/sensitive/non-shareable/architecture override):
 - Page size:
 - Empty/no-results/error/loading treatment:
 - Back/scroll restoration:
+- Selection scope (page / all-results), selected count, filter/sort/paging behavior, keyboard operation, bulk confirmation, and post-action focus:
 
 ## Flow ledger
 
@@ -106,6 +121,8 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 - Version conflict and multi-tab behavior:
 - Session expiry/re-authentication:
 - Long-running progress and return path:
+- Stale-request cancellation/invalidation and pending-state ownership:
+- Dialog/form preservation and retry after mutation failure:
 
 ## Validation
 
@@ -114,6 +131,7 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 - Error summary/inline policy:
 - Server error mapping:
 - Sensitive-value handling:
+- `noValidate`, first-invalid focus, duplicate-submit prevention, unsaved changes, and submit recovery:
 
 ## Permission and clipboard
 
@@ -140,3 +158,6 @@ Keep visual rationale and token values in `DESIGN.md`; do not duplicate them her
 - Japan readiness matrix (IME, mixed scripts, normalization, long names/addresses, visual regression), when applicable:
 - Component-state/visual regression coverage:
 - Canonical sibling flow used for comparison:
+- Project audit command/result:
+- CRUD full-flow evidence:
+- Failure-path evidence:

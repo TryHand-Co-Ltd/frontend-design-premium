@@ -26,6 +26,22 @@ States: idle, drag-over, validating, queued, uploading, paused/cancelled when su
 - Preview untrusted content safely; revoke object URLs and avoid decoding huge media on the main thread.
 - Announce status changes without flooding live regions. Keep layout stable as rows enter progress/error states.
 
+## Single-select dropdowns
+
+Decide whether the popup may remain platform-owned before choosing the component:
+
+- Use a native `<select>` only when the browser/operating-system popup appearance and geometry are acceptable. CSS on `<option>` cannot reliably control that popup across platforms.
+- When popup width, border, radius, spacing, option states, scrolling, or placement is part of the authored design, use the project's maintained accessible Select/Listbox primitive (for example, an established Reka UI, Radix UI, or Headless UI integration). Do not hand-build ARIA behavior.
+
+Treat trigger and popup as one geometry contract:
+
+- Match the popup's outer width to the trigger within **1 CSS px** and align their inline-start edges unless a documented responsive rule requires otherwise.
+- Reuse the same border-width and border-color tokens, the same radius family, and compatible control density. Do not leave the popup on a browser-default 1 px border when the trigger uses a stronger authored border.
+- Render the popup through the primitive's portal, use collision-aware placement, bound its maximum height, and keep its owned scrollbar visible and tokenized.
+- Preserve selected, highlighted, disabled, loading, empty, and error states without shifting the trigger or popup geometry.
+
+Preserve the complete interaction contract: accessible name, combobox/listbox roles supplied by the primitive, Arrow-key navigation, Enter/Space selection, Escape close, typeahead, visible focus, selected/disabled announcements, form value/touched/error integration, and localized option/accessibility text. Verify the open popup in a real browser; source-level classes on the closed trigger are not evidence that the platform popup matches.
+
 ## Combobox, autocomplete, and typeahead
 
 Use a maintained combobox primitive that follows the WAI-ARIA pattern.
@@ -40,12 +56,20 @@ Use a maintained combobox primitive that follows the WAI-ARIA pattern.
 
 ## Date and date-range pickers
 
+Make the native-versus-authored date-picker decision explicit before choosing the component. Decide whether the calendar popup may remain platform-owned:
+
+- Use native `input[type="date"]` only when the browser/operating-system calendar's language, labels, format presentation, geometry, and behavior are acceptable across the supported browser/OS matrix. Setting `lang`, formatting the closed value, or styling the input does not guarantee the open popup UI.
+- When the active locale, calendar labels, footer actions, geometry, or interaction must be authored and consistent, use the project's maintained accessible date-picker primitive. Load its complete locale pack and do not hand-build calendar ARIA behavior.
+- Treat date-only storage, display formatting, popup localization, and timezone as separate contracts. A localized display value is not a storage value, and locale does not choose a business timezone.
+
 - Distinguish date-only values, local date-time, and absolute instants in the data model.
 - Provide a typed input path in addition to the calendar when practical, with localized format guidance and deterministic parsing.
 - Date ranges define inclusive/exclusive semantics, valid order, min/max, unavailable dates, and timezone before implementation.
 - Presets such as Today, This week, Last 7 days, or Custom must follow domain definitions, not labels alone.
 - Separate draft selection from committed filters when an Apply button exists; Cancel restores the prior committed range and Clear has an explicit outcome.
-- Calendar keyboard behavior, focus, today, selected, range start/end, disabled dates, month navigation, and announcements must remain distinct.
+- Calendar keyboard behavior, focus, today, selected, range start/end, disabled dates, month navigation, announcements, Escape close, and trigger focus restoration must remain distinct.
+- Localize heading, month/year, weekday headers, navigation controls, today/clear/apply/cancel actions, placeholders, validation, and accessible names. Verify there is no fallback English from the component library or browser.
+- Open the popup in a real browser and verify required keyboard behavior, focus restoration, locale copy, narrow/short viewports, collision handling, bounded height, and scrolling. Add pointer/touch and a full 200% zoom matrix when the project requires extended verification. Source attributes and closed-input screenshots do not prove the open calendar.
 - Japanese locale does not imply era notation. Follow `references/japanese-localization.md`.
 
 ## Inline editing
@@ -116,6 +140,7 @@ Prefer a native range input when it meets visual and interaction needs. A custom
 - Use `useSearchParams` (Next.js) or `useSearchParams` (React Router) to read/write filter state.
 - Do not duplicate state: URL is the source of truth. Component state derives from URL.
 - On page load, read initial filter state from URL. If no URL params exist, use sensible defaults (no filters, page 1).
+- Allow `UX-CONTRACT.md` to override URL persistence only for transient, sensitive, non-shareable, or architecture-constrained state; record the reason rather than silently keeping committed dataset state in component memory.
 
 ```tsx
 // Example: sync filters with URL

@@ -4,7 +4,7 @@ This directory contains structured eval cases for verifying that the skill produ
 
 ## Contents
 
-- **`evals.json`** — 38 eval cases with prompts, expected outputs, file lists, and a machine-validated Japan-readiness claim matrix.
+- **`evals.json`** — 57 eval cases with prompts, expected outputs, file lists, and a machine-validated Japan-readiness claim matrix.
 - **`fixtures/`** — Broken/input fixtures wired from `evals.json` `files` entries.
 - **`results/`** — Recorded agent output for each eval (created by the runner).
 
@@ -125,6 +125,13 @@ To add a case:
 | 23–24 | On-demand packs | Permission UI (hide/disable/403) + overlay layer contract |
 | 25–26 | Business authority | ADR/API evidence, conflict handling, high-risk escalation |
 | 27–38 | Japan readiness | Market/locale separation, IME beyond search, content/typography, representative audiences, regulated escalation, anti-stereotype, marketing routing |
+| 39 | Single-select popup | Native-versus-authored decision, trigger/popup geometry, accessibility, and browser verification |
+| 40 | Date-picker locale | Native-versus-authored decision, complete Japanese calendar locale, typed storage, and browser verification |
+| 41 | Global scrollbar baseline | Automatic product-owned surface coverage, standards and engine fallbacks, forced colors, and runtime evidence |
+| 42 | Table/form scroll ownership | Table-bounded viewport sizing, natural-height forms, independent tab contracts, and regression verification |
+| 43–47 | Review-gap regressions | Native datalist, `appearance-none`, sibling native pickers, WebKit-only scrollbars, and shared-shell height variants |
+| 48–52 | Canonical UI project audit | Canonical-owner drift, opt-in scrollbar gaps, CRUD failure paths, stable JSON findings, and runtime-evidence boundaries |
+| 53–57 | Contract defaults and accessibility | Default loading indicator, URL-state persistence, textarea/label rules, responsive dialogs, and required-versus-extended evidence |
 
 ## Notes
 

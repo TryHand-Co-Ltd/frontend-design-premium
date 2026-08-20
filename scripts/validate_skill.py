@@ -123,6 +123,7 @@ def main() -> int:
             errors.append(f"missing referenced file: {relative}")
 
     expected = [
+        "references/canonical-ui-resolution.md",
         "references/design-context-lifecycle.md",
         "references/token-mapping.md",
         "references/consistency-migration.md",
@@ -221,6 +222,10 @@ def main() -> int:
 
     package_pairs = [
         (SKILL, CLAUDE_PACKAGE_SKILL / "SKILL.md"),
+        (
+            ROOT / "scripts" / "audit_project.py",
+            CLAUDE_PACKAGE_SKILL / "scripts" / "audit_project.py",
+        ),
         (
             ROOT / "scripts" / "resolve_frontend_design.py",
             CLAUDE_PACKAGE_SKILL / "scripts" / "resolve_frontend_design.py",

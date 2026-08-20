@@ -2,6 +2,20 @@
 
 Use this before finishing every implementation or review. Mark non-applicable items mentally; do not dump the checklist into the user response.
 
+## Mandatory project audit sequence
+
+For product/admin work, complete this sequence before claiming compliance:
+
+1. Run `audit_project.py` in strict mode and resolve contract/static findings.
+2. Check `DESIGN.md`, runtime tokens, canonical owners, and sibling workflows for drift.
+3. Search for false affordances and the grep-able patterns in `anti-patterns.md`.
+4. Run project-owned accessibility and localization checks.
+5. Exercise the browser state matrix: loading, empty/no-results, error, slow/stale, success, keyboard, narrow viewport, locale/theme, and reduced motion as applicable.
+6. Verify complete create/read/update/delete behavior, navigation, list restoration, feedback, confirmation, and focus.
+7. Verify server failure-path recovery, retry, duplicate prevention, stale requests, and destructive-dialog recovery.
+
+The static auditor does not execute or replace steps 4–7. Record exact commands and results as completion evidence.
+
 ## Dependency, business context, and design context
 
 - [ ] The current installed `frontend-design` skill was loaded completely.
@@ -34,15 +48,23 @@ Use this before finishing every implementation or review. Mark non-applicable it
 - [ ] For a large migration, the ledger, canonical target, risk priority, compatibility path, rollout/rollback, and legacy-removal criteria are explicit.
 - [ ] A migrated workflow is complete end-to-end rather than mixing new visuals with old dialog/toast/navigation behavior.
 
-## Interaction
+## Required accessibility baseline
 
 - [ ] Click targets use button/link semantics where possible.
 - [ ] Enabled targets have hover, focus-visible, active, pointer cursor, disabled, and busy states as applicable.
-- [ ] Keyboard, touch/no-hover, and Escape behavior work.
-- [ ] Target size/spacing, contrast, accessible names, and focus order are sufficient.
+- [ ] Native and authored controls preserve their standard keyboard behavior; modal and composite-widget Escape behavior matches their canonical contract.
+- [ ] Contrast, accessible names, and focus order are sufficient.
 - [ ] Focus is not obscured by sticky UI, sheets, banners, or the virtual keyboard.
 - [ ] Icon-only controls have localized accessible names.
 - [ ] Drag interactions have a non-drag alternative.
+
+## Recommended extended verification
+
+These checks remain review evidence, not blocking requirements, unless `DESIGN.md`, `UX-CONTRACT.md`, the accessibility target, or the supported-platform contract makes them mandatory.
+
+- [ ] Touch/no-hover behavior and touch-target measurement were inspected on relevant mobile controls.
+- [ ] A full 200% zoom matrix was exercised for representative screens.
+- [ ] Cross-device touch and virtual-keyboard behavior was exercised for supported mobile platforms.
 
 ## Navigation and layout
 
@@ -64,11 +86,24 @@ Use this before finishing every implementation or review. Mark non-applicable it
 - [ ] Delete/filter changes cannot leave an invalid empty page.
 - [ ] Narrow-screen overflow or alternate representation is usable and visible.
 - [ ] Selection distinguishes page from all-results scope; bulk actions report exact scope and partial failures.
+- [ ] Scroll ownership is explicit per active panel: a viewport-bounded table scrolls internally without imposing its height/overflow contract on a sibling form panel or shared shell.
+- [ ] In mixed table/form tabs, switching to the form restores natural-height/document scrolling or the established application content scroller; no table-owned `100vh`/`h-dvh`/fixed-height/`overflow: hidden` constraint clips the form.
+- [ ] Table page sizes such as 10/20/50 keep the same table frame footprint, while the full long form remains reachable at short/tall viewports without competing vertical scroll owners; repeat at 200% zoom when extended verification is required.
 
 ## Forms and advanced inputs
 
 - [ ] Native browser validation bubbles are disabled with `novalidate`/`noValidate`; no `reportValidity()` UX.
+- [ ] Every single-select makes the native or authored popup decision explicit; native is used only when platform-owned popup geometry is acceptable.
+- [ ] Native-select audits include CSS `appearance: none` and utility classes such as `appearance-none`; removing native chrome is not treated as evidence that the opened platform popup is authored.
+- [ ] Every `<datalist>`/`input[list]` makes the native or authored decision explicit; authored combobox requirements use the project's maintained accessible Combobox/Autocomplete primitive instead of a browser-owned datalist popup.
+- [ ] For an authored Select/Listbox, the open popup matches the trigger's outer width within 1 CSS px, aligns to it, and shares border-width/color, radius-family, and density tokens.
+- [ ] The open popup was verified in a real browser for required keyboard/focus/selection, long options, narrow viewports, viewport-edge collision, bounded height, and scrolling; add touch and a full 200% zoom matrix when extended verification is required.
+- [ ] Every date picker makes the native or authored decision explicit; native is used only when browser/OS-owned locale, labels, geometry, and behavior are acceptable on supported platforms.
+- [ ] The same ownership decision and locale verification covers native `time`, `month`, `week`, and `datetime-local` pickers rather than auditing only `date`.
+- [ ] An authored calendar loads the complete active locale and localizes month/year, weekdays, navigation, today/clear/apply/cancel actions, placeholders, validation, and accessible names without fallback English.
+- [ ] The open calendar was verified in a real browser for required keyboard selection, Escape, trigger focus restoration, locale copy, narrow/short viewports, collision, bounded height, and scrolling; add pointer/touch and a full 200% zoom matrix when extended verification is required.
 - [ ] App validation shows text errors, correction guidance, field association, and first-error focus.
+- [ ] Native fields have working label association; clicking the label focuses/activates the control, invalid fields expose `aria-invalid="true"`, and `aria-describedby` references existing help/error content.
 - [ ] Duplicate submits are blocked without changing button dimensions.
 - [ ] Textareas have `resize: none` plus adequate/autogrowing space.
 - [ ] Sensitive fields are masked by default with an accessible show/hide control.
@@ -97,6 +132,8 @@ Use this before finishing every implementation or review. Mark non-applicable it
 
 - [ ] No product flow calls `alert()`, `confirm()`, or `prompt()`.
 - [ ] Modal focus, inert background, Escape, scroll lock, accessible naming, and focus restoration work.
+- [ ] Modal/edit/delete surfaces stay within visual viewport and safe-area bounds; long bodies scroll internally, actions remain reachable, and the virtual keyboard does not cover the active field/action.
+- [ ] Non-modal/persistent drawers use a documented canonical variant and do not claim modal semantics, background isolation, or focus trapping they do not implement.
 - [ ] Dangerous actions show the object, scope, consequence, and explicit action verb.
 - [ ] Soft-delete vs hard-delete matches the UX contract; reversible removals offer Undo/Restore when honest.
 - [ ] Serious dialogs initially focus the least destructive action.
@@ -143,7 +180,10 @@ Use this before finishing every implementation or review. Mark non-applicable it
 ## Stability, visual, and component QA
 
 - [ ] Scrollbars are tokenized, visible/usable, and layout-stable.
-- [ ] Images, skeletons, errors/help, spinners, fonts, and async content reserve compatible geometry.
+- [ ] The application stylesheet provides a global scrollbar baseline; a new scroll container receives thumb/track/hover/active styling without an opt-in class.
+- [ ] WebKit scrollbar pseudo-elements are treated as engine fallbacks, not the complete contract; standards-based `scrollbar-color` and `scrollbar-width` cover Firefox where supported.
+- [ ] Computed `scrollbar-color` on the application root is not the browser default in normal color mode, while forced-colors/high-contrast behavior remains system-operable.
+- [ ] Images, errors/help, fonts, async content, and the chosen spinner/loader or optional skeleton reserve compatible geometry.
 - [ ] No control moves between idle/loading/success/error states.
 - [ ] Narrow viewport, zoom/reflow, reduced motion, empty, slow, and error states were inspected.
 - [ ] Light/dark/high-contrast themes preserve semantic hierarchy and avoid startup theme flash where applicable.

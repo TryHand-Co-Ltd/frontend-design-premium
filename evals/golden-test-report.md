@@ -1,5 +1,17 @@
 # Golden Test Report — frontend-design-premium
 
+## v1.4.0 date-picker locale candidate — 2026-08-10
+
+- Structural validation covers 57 evals and adds deletion-sensitive proof for the single-select and date-picker ownership decisions, Japanese locale completeness, anti-pattern guidance, canonical UI project audits, contract defaults, runtime evidence requirements, and the negative fixtures in evals #39–57.
+- Baseline failure was reproduced in the Vue component lab: a Japanese form using native `input[type="date"]` opened an English browser-owned calendar (`August`, English weekdays, `Clear`, `Today`).
+- The reference implementation replaced it with a maintained authored picker using `ja-JP`, Gregorian dates, `YYYY/MM/DD` display, ISO date-only storage, localized visible/accessibility labels, keyboard/pointer selection, Escape, and focus restoration.
+- Verification evidence recorded for that implementation: 85 unit tests, 111 Storybook browser tests, production and Storybook builds, direct keyboard/pointer inspection, and zero Storybook accessibility violations.
+- The scrollbar follow-up reproduced the opt-in failure, moved the theme to global application selectors, and added a browser assertion that the application root no longer computes `scrollbar-color: auto`; the Vue lab then passed 86 unit tests and 111 Storybook browser tests.
+- The mixed table/form follow-up reproduced a scope leak: a table-only viewport request led the previous contract to recommend `h-dvh overflow-hidden` on the shared shell and an internal form-panel scroller. Eval #42 now requires table-bounded sizing, independent tab-panel scroll ownership, and natural-height/document scrolling for long forms unless an established application content scroller already exists.
+- Review-gap regressions #43–47 cover native datalist used as an authored combobox, Tailwind `appearance-none`, native time/month/week/datetime-local locale leaks, WebKit-only scrollbar styling, and shared-shell sizing through `h-full`, `min-h-screen`, percentage heights, or alternate viewport units.
+- Canonical UI audit and contract-default evals #48–57 cover owner drift, global scrollbar enforcement, CRUD recovery, static/runtime evidence boundaries, stable loading, URL-state persistence, textarea and label behavior, responsive dialogs, and required versus extended accessibility evidence.
+- This evidence does not cover every supported browser/OS locale implementation, Japanese screen-reader combinations, or native Japanese copy review; those remain release gates when the product claims that support.
+
 ## v1.3.0 Japan-readiness candidate — 2026-08-04
 
 - Structural validation covers 38 evals, all fixture paths, six Japan-readiness claims, explicit negative oracles, and required evidence types.
